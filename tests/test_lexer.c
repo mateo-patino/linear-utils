@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 
 /*
@@ -24,6 +25,7 @@ static bool test_operator_lexer_valid(void) {
             ASSERT_TRUE(token.type == OPERATOR);
             ASSERT_TRUE(token.obj != NULL);
             ASSERT_TRUE(*(operator_type *)token.obj == (operator_type)i);
+            ASSERT_TRUE(strcmp(aliases[j], token.user_str) == 0);
 
             free_token_obj(&token);
         }
@@ -54,6 +56,7 @@ static bool test_scalar_lexer_valid(void) {
         ASSERT_TRUE(token.type == SCALAR);
         ASSERT_TRUE(token.obj != NULL);
         ASSERT_EQ_SCALAR(*(scalar_t *)token.obj, expected_scalars[i]);
+        ASSERT_TRUE(strcmp(valid_scalars[i], token.user_str) == 0);
 
         free_token_obj(&token);
     }
