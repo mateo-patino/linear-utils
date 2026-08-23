@@ -30,19 +30,19 @@ tokens_status create_matrix_token(token_t *token, unsigned int nrow, unsigned in
 /*
 * Tokenizes 'str' into an operator token.
 */
-tokens_status create_operator_token(operator_type op_type, token_t *dst);
+tokens_status create_operator_token(const char *str, operator_type op_type, token_t *dst);
 
 /*
-* Tokenizes 'c' into a LPAREN or RPAREN token. The new token is written to 'dst'.
+* Tokenizes 'str' into a LPAREN or RPAREN token. The new token is written to 'dst'.
 * A tokens_status code is returned to indicate the success or failure of the tokenization.
 */
-tokens_status create_parens_token(const char c, token_t *dst);
+tokens_status create_parens_token(const char *str, token_t *dst);
 
 
 /*
 * Creates a scalar token given a (valid) scalar value. The new token is written to dst.
 */
-tokens_status create_scalar_token(scalar_t scalar, token_t *dst);
+tokens_status create_scalar_token(const char *str, scalar_t scalar, token_t *dst);
 
 
 /*
