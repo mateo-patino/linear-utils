@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <assert.h>
 
 
 /*
@@ -199,11 +200,13 @@ tokens_status create_operator_token(const char *str, operator_type op_type, toke
 }
 
 
-tokens_status create_parens_token(const char c, token_t *dst) {
-    if (!dst) {
+tokens_status create_parens_token(const char *str, token_t *dst) {
+    if (!dst || !str) {
         return TOKENS_INVALID_ARG;
     }
-
+    assert(strlen(str) == 1);
+    
+    char c = str[0];
     switch (c) {
         case '(':
             dst->type = LPAREN;
@@ -216,12 +219,18 @@ tokens_status create_parens_token(const char c, token_t *dst) {
             return TOKENS_INVALID_ARG;
     }
     dst->obj = NULL;
+    dst->user_str = strdup(str);
+
+    if (!dst->user_str) {
+        return TOKENS_MEMORY_FAILURE;
+    }
+
     return TOKENS_OK;
 }
 
 
-tokens_status create_scalar_token(scalar_t scalar, token_t *dst) {
-    if (!dst) {
+tokens_status create_scalar_token(const char *str, scalar_t scalar, token_t *dst) {
+    if (!dst || !str) {
         return TOKENS_INVALID_ARG;
     }
     scalar_t *obj = malloc(sizeof(scalar_t));
@@ -231,6 +240,11 @@ tokens_status create_scalar_token(scalar_t scalar, token_t *dst) {
     dst->type = SCALAR;
     *obj = scalar;
     dst->obj = obj;
+    dst->user_str = strdup(str);
+
+    if (!dst->user_str) {
+        return TOKENS_MEMORY_FAILURE;
+    }
 
     return TOKENS_OK;
 }
@@ -344,11 +358,11 @@ tokens_status create_token_from_str(const char *str, token_t *dst) {
 
     /* Tokenize parenthesis */
     if (!strcmp(str, ")") || !strcmp(str, "(")) {
-        return create_parens_token(str[0], dst);
+        return create_parens_token(str, dst);
     }
     /* Tokenize scalars */
     else if (is_scalar(str, &val)) {
-        return create_scalar_token(val, dst); 
+        return create_scalar_token(str, val, dst); 
     }
     /* Tokenize operators */
     else if (is_operator(str, &op_type)) {
