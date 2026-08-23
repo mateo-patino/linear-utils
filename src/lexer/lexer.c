@@ -178,8 +178,8 @@ tokens_status create_matrix_token(token_t *token, unsigned int nrow, unsigned in
 }
 
 
-tokens_status create_operator_token(operator_type op_type, token_t *dst) {
-    if (!dst) { 
+tokens_status create_operator_token(const char *str, operator_type op_type, token_t *dst) {
+    if (!dst || !str) { 
         return TOKENS_INVALID_ARG;
     }
     operator_type *op = malloc(sizeof(operator_type));
@@ -189,6 +189,11 @@ tokens_status create_operator_token(operator_type op_type, token_t *dst) {
     *op = op_type;
     dst->type = OPERATOR;
     dst->obj = op;
+    dst->user_str = strdup(str);
+    
+    if (!dst->user_str) {
+        return TOKENS_MEMORY_FAILURE;
+    }
     
     return TOKENS_OK;
 }
@@ -347,7 +352,7 @@ tokens_status create_token_from_str(const char *str, token_t *dst) {
     }
     /* Tokenize operators */
     else if (is_operator(str, &op_type)) {
-        return create_operator_token(op_type, dst);
+        return create_operator_token(str, op_type, dst);
     } 
     /* Tokenize matrices */
     else if (is_matrix_marker(str, &nrow, &ncol)) {
