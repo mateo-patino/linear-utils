@@ -28,6 +28,7 @@ typedef enum {
 typedef struct {
     token_type type;
     void *obj;
+    const char *user_str;
 } token_t;
 
 
