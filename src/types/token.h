@@ -81,10 +81,10 @@ void fully_free_tokens(token_t *tokens, size_t count);
 
 
 /*
-* Frees 'count' token_t->obj pointers in a 'tokens' array.
+* Frees 'count' token_t->obj and token_t->user_str pointers in a 'tokens' array.
 * The 'tokens' pointer is not freed, however.
 */
-void free_token_objs_by_count(token_t *tokens, size_t count);
+void free_tokens_by_count(token_t *tokens, size_t count);
 
 
 /*

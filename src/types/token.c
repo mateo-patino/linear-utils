@@ -58,17 +58,18 @@ const char **operator_alias[NUM_OP] = {
 
 
 void fully_free_tokens(token_t *tokens, size_t count) {
-    free_token_objs_by_count(tokens, count);
+    free_tokens_by_count(tokens, count);
     free(tokens);
 }
 
 
-void free_token_objs_by_count(token_t *tokens, size_t count) {
+void free_tokens_by_count(token_t *tokens, size_t count) {
     if (!tokens) {
         return;
     }
     for (size_t i = 0; i < count; i++) {
         free_token_obj(tokens + i);
+        free((char *)tokens[i].user_str);
     }
 }
 
