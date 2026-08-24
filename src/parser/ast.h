@@ -20,7 +20,6 @@ typedef struct {
 } ast_t;
 
 
-
 /*
 * Recursively frees an AST with root `ast->root` and also `ast` itself.
 */
