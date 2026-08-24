@@ -79,13 +79,16 @@ size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena);
 
 
 /*
-* Write a char `c` at an specific offset `target_offset`
+* Write a char `c` at an specific offset `target_offset`.
 * 
 * If `target_offset` is smaller than `arena->offset`, i.e., it is an offset at a 
 * previously allocated byte, the old value will be overwritten. `arena->offset` is 
 * not moved down in this case. If `target_offset` is larger than or equal to `arena->offset` 
 * the new value is written and `arena->offset` is advanced to `target_offset + 1` so that
 * future writes to the arena do not overwrite the new value.
+*
+* If `target_offset` is larger than the capacity of the arena, SIZE_MAX is returned and 
+* no value is written. This function does not resize the arena.
 *
 * 0 is returned upon success and SIZE_MAX is returned if the character could not be written.
 */
