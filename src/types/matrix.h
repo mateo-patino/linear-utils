@@ -7,6 +7,7 @@
 /* Scalar type */
 typedef double scalar_t;
 #define PRISCALAR "%.*f"
+#define SCALAR_PRECISION 3
 #define SCALAR_MAX DBL_MAX
 
 /* Matrix interface... */
