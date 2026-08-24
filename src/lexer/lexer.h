@@ -24,7 +24,7 @@ typedef enum {
 * entries of the matrix. Hence, it should only be called after strtok has been fed 
 * an initial string.
 */
-tokens_status create_matrix_token(token_t *token, unsigned int nrow, unsigned int ncol);
+tokens_status create_matrix_token(const char *marker_str, token_t *token, unsigned int nrow, unsigned int ncol);
 
 
 /*
@@ -51,6 +51,11 @@ tokens_status create_scalar_token(const char *str, scalar_t scalar, token_t *dst
 * failure.
 *
 * If 'token_count' is not NULL, the number of tokens generated is written there.
+*
+* 'str' should be equal to argv[1], i.e. the expression given by the user. argv[1] will be modified
+* as strtok is called to read the string. The memeber user_str of each token produced will point
+* to argv[1] to whatever string produced that specific token. The only exception to this will be 
+* matrix tokens, which will not point to an address in argv[1].
 *
 * If 'status' is not NULL, the status of tokenization is written there. This status
 * will be TOKENS_OK if the string was correctly tokenized. Otherwise, the corresponding

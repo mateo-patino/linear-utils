@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "types/matrix.h"
 #include "errorprinter.h"
+#include "arena.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -154,12 +155,70 @@ static token_t *resize_tokens(token_t *tokens, size_t *current_size) {
 }
 
 
+/*
+* This function assumes marker_str points to the first byte of a marker lexeme in m_str 
+* (from create_tokens_from_string), and it reads `nentry` entries starting at marker_str.
+* It keeps track of how many entries it has read by counting NULs, so this function MUST
+* be called after the entire matrix string has been modified by strtok and NULs have
+* been put after each string representing a matrix entry. It must also be called only after 
+* verifying that at least `nentry` entries are available for reading.
+*
+* NEEDSWORK: this function is a hack to be able to create a user_str for matrix
+* tokens. Any simpler way to do this that doesn't involve making as many fragile assumptions 
+* across functions and memory objects would be welcomed.
+*/
+static const char *create_matrix_user_str(const char *marker_str, size_t nentry) {
+    if (!marker_str || !nentry) {
+        return NULL;
+    }
 
-tokens_status create_matrix_token(token_t *token, unsigned int nrow, unsigned int ncol) {
-    if (nrow <= 0 || ncol <= 0 || !token) {
+    /* A heap buffer where we'll write the user_str byte by byte */
+    arena_t *arena = create_arena(KiB(1));
+
+    /* pinter that will be moved each iteration and offset of the ' ' after last object read */
+    const char *ptr = marker_str;
+    size_t last_space_offset = 0;
+ 
+    /* + 1 corresponds to the marker lexeme */
+    size_t nobjects = nentry + 1;
+    size_t objects_read = 0;
+    char space = ' ';
+    bool seen_object = false;
+
+    while (objects_read < nobjects) {
+        seen_object = false;
+        
+        /* Write bytes to buffer until finding a '\0' */
+        while (*ptr != '\0') {
+            seen_object = true;
+            awrite(ptr++, sizeof(char), _Alignof(char), arena);
+        }
+
+        /* Add a whitespace between every object read */
+        if (seen_object) {
+            last_space_offset = awrite(&space, sizeof(char), _Alignof(char), arena);
+            objects_read++;
+        }
+        ptr++;
+    }
+    
+    /* Write a NUL terminator at the end of the string */
+    set_char_at('\0', last_space_offset, arena); 
+    
+    char *user_str = strdup(arena->start);
+    free_arena(arena);
+
+    return user_str;
+}
+
+
+
+tokens_status create_matrix_token(const char *marker_str, token_t *token, unsigned int nrow, unsigned int ncol) {
+    if (nrow <= 0 || ncol <= 0 || !token || !marker_str) {
         return TOKENS_INVALID_ARG;
     }
     
+    /* Call strtok(NULL, ...) to get the entries that follow the marker_str */
     tokens_status status;
     scalar_t *data = get_matrix_entries_from_str(nrow*ncol, &status);
     if (!data || status != TOKENS_OK) {
@@ -174,6 +233,7 @@ tokens_status create_matrix_token(token_t *token, unsigned int nrow, unsigned in
     }
     token->type = MATRIX;
     token->obj = mat;
+    token->user_str = create_matrix_user_str(marker_str, nrow * ncol);
 
     return TOKENS_OK;
 }
@@ -255,7 +315,7 @@ token_t *create_tokens_from_string(const char *str, size_t *token_count, tokens_
         return NULL;
     }
 
-    /* Make mutable copy of string */
+    /* Make copy of 'str' */
     char *m_str = strdup(str);
     if (!m_str) {
         if (status) { *status = TOKENS_MEMORY_FAILURE; }
@@ -355,7 +415,6 @@ tokens_status create_token_from_str(const char *str, token_t *dst) {
     operator_type op_type;
     scalar_t val;
 
-
     /* Tokenize parenthesis */
     if (!strcmp(str, ")") || !strcmp(str, "(")) {
         return create_parens_token(str, dst);
@@ -370,7 +429,7 @@ tokens_status create_token_from_str(const char *str, token_t *dst) {
     } 
     /* Tokenize matrices */
     else if (is_matrix_marker(str, &nrow, &ncol)) {
-        if ((matrix_token_status = create_matrix_token(dst, nrow, ncol)) != TOKENS_OK) {
+        if ((matrix_token_status = create_matrix_token(str, dst, nrow, ncol)) != TOKENS_OK) {
             set_error("Invalid matrix starting at '%s'", str);
             return matrix_token_status;
         } 
