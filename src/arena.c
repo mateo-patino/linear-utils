@@ -105,3 +105,18 @@ size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena) {
 
     return aligned_offset;
 }
+
+size_t awrite_char_at(char c, size_t target_offset, arena_t *arena) {
+    if (!arena || !target_offset || target_offset > MAX_CAPACITY - 1) { 
+        return SIZE_MAX;
+    }
+
+   char *target = arena->start + target_offset;
+   *target = c;
+
+    if (target_offset >= arena->offset) {
+        arena->offset = target_offset + 1;
+    }
+
+    return 0;
+}
