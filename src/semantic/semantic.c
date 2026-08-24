@@ -225,48 +225,16 @@ static semantic_status run_semantic_operand_checks(operator_type op, const token
 }
 
 
-static const char *token_to_str(const token_t *tok) {
-    if (!tok) {
-        return NULL;
-    }
-
-    /* NEEDSWORK: this function has access the token's data (e.g. scalar value, matrix entries, etc.)
-    * The messages it returns to set_operand_error can be made richer and more informative. 
-    * Use a static global buffer to write strings there or memory arena */
-    token_type tok_type = tok->type;
-    switch (tok_type) {
-        case SCALAR:
-            return "scalar";
-        case MATRIX:
-            return "matrix";
-        case OPERATOR:
-            operator_type *op = (operator_type *)tok->obj;
-            if (!op) {
-                return "operator ?";
-            }
-            return op_to_str(*op);
-        case LPAREN:
-            return "left parenthesis";
-        case RPAREN:
-            return "right parenthesis";
-        case TOKENS_END:
-        default:
-            return "unknown token";
-    }
-}
-
-
 static bool set_operand_error(semantic_status stat, operator_type op, const token_t *left, const token_t *right) {
     if (has_error()) {
         return false;
     }
 
-
     const char *op_str = op_to_str(op);
     bool use_unary_version = false;
 
-    const char *left_str = token_to_str(left);
-    const char *right_str = token_to_str(right);
+    const char *left_str = left->user_str;
+    const char *right_str = right->user_str;
 
     /* Check if unary operand error case */
     if (!left && right) {
@@ -389,7 +357,7 @@ static io_type is_valid_ast_helper(const node_t *node) {
 
         /* Check the scalar is not NaN or inf */
         if (!is_valid_scalar_token(token)) {
-            set_error("Infinite or undefined scalar '%s'", token_to_str(token));
+            set_error("Infinite or undefined scalar '%s'", token->user_str);
             set_status(SEMANTIC_INFINITE_OR_NAN_SCALAR);
             return SEM_NULL;
         }
@@ -400,7 +368,7 @@ static io_type is_valid_ast_helper(const node_t *node) {
 
         /* Check the matrix's entries are not NaN or inf */
         if (!is_valid_matrix_token(token)) {
-            set_error("Infinite or undefined matrix entry in '%s'", token_to_str(token));
+            set_error("Infinite or undefined matrix entry in '%s'", token->user_str);
             set_status(SEMANTIC_INFINITE_OR_NAN_ENTRY);
             return SEM_NULL;
         }
