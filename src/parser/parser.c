@@ -341,7 +341,7 @@ node_t *create_ast_helper(const token_t *tokens, int low, int high) {
             set_error("malloc() failed.");
             RETURN_NULL_AND_STATUS(PARSE_MEMORY_FAILURE);
         }
-        
+
         return new_node;
     }
 
