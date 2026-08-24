@@ -89,7 +89,7 @@ size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena);
 *
 * 0 is returned upon success and SIZE_MAX is returned if the character could not be written.
 */
-size_t awrite_char_at(char c, size_t target_offset, arena_t *arena);
+size_t set_char_at(char c, size_t target_offset, arena_t *arena);
 
 
 
