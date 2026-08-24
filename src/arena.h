@@ -42,12 +42,6 @@
 #define GiB(n) ((n) * (1ULL << 30))
 
 
-/* Maximum aligned required to allocate any type */
-#define ALIGNMENT alignof(max_align_t)
-
-/* Align `val` up to ALIGNMENT */
-#define ALIGN_UP(val) (((val) + ALIGNMENT - 1) & ~(ALIGNMENT - 1))
-
 /* The / 4 is a safety margin since various expressions in this interface
 * can lead to overflow (e.g. val + ALIGNMENT, current_offset + sz, etc.).
 * We'll simply reject any arenas greater than SIZE_MAX / 4 as well as any
@@ -88,12 +82,18 @@ void free_arena(arena_t *arena);
 * If the arena cannot fit the new object, the arena gets resized 
 * automatically.
 *
-* It returns an integer representing the offset from `start` where the
+* It returns an integer representing the offset from `arena->start` where the
 * object was allocated. Upon failure, SIZE_MAX is returned. It is
 * guaranteed that SIZE_MAX will never be a valid offset value given the
 * MAX_CAPACITY constraint.
 */
-size_t awrite(const char *src, size_t sz, arena_t *arena);
+size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena);
+
+
+/*
+*
+*/
+size_t awrite_replace(char c, size_t target_offset, arena_t *arena);
 
 
 #endif
