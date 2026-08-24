@@ -33,6 +33,13 @@ static char *resize_memory(char *mem, size_t new_capacity) {
 }
 
 
+/*
+* Align `val` up to the closest aligned value according to `alignment`
+*/
+static size_t align_up(size_t val, size_t alignment) {
+    return (val + alignment - 1) & ~(alignment -1);
+}
+
 
 arena_t *create_arena(size_t capacity) {
     if (!capacity || capacity > MAX_CAPACITY) {
@@ -44,16 +51,15 @@ arena_t *create_arena(size_t capacity) {
         return NULL;
     }
 
-    size_t aligned_capacity = ALIGN_UP(capacity);
-    char *mem = (char *)aligned_alloc(ALIGNMENT, aligned_capacity);
+    char *mem = (char *)malloc(capacity);
     if (!mem) {
         free(arena);
         return NULL;
     }
 
-    memset(mem, 0, aligned_capacity);
+    memset(mem, 0, capacity);
     arena->start = mem;
-    arena->capacity = aligned_capacity;
+    arena->capacity = capacity;
     arena->offset = 0;
 
     return arena;
@@ -69,14 +75,22 @@ void free_arena(arena_t *arena) {
 }
 
 
-size_t awrite(const char *src, size_t sz, arena_t *arena) {
-    if (!arena || !src || !sz || sz > MAX_CAPACITY) {
+size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena) {
+    if (!arena || !src || !sz || sz > MAX_CAPACITY || !alignment) {
         return SIZE_MAX;
     }
 
+    /* alignment should be a power of 2 returned by _Alignof */
+    if (!(alignment & (alignment - 1))) {
+        return SIZE_MAX;
+    }
+
+    size_t aligned_offset = align_up(arena->offset, alignment);
+    size_t space_required = aligned_offset - arena->offset + sz;  
+
     /* Resize if needed */
-    if (get_open_space(arena) < ALIGN_UP(sz)) {
-        size_t new_capacity = ALIGN_UP(2 * arena->capacity + sz);
+    if (get_open_space(arena) < space_required) {
+        size_t new_capacity = align_up(2 * arena->capacity + sz, alignment);
         char *new_mem = resize_memory(arena->start, new_capacity);
         if (!new_mem) {
             return SIZE_MAX;
@@ -84,10 +98,10 @@ size_t awrite(const char *src, size_t sz, arena_t *arena) {
         arena->start = new_mem;
         arena->capacity = new_capacity;
     }
+    
+    /* Write `sz` bytes at the closest aligned offset */
+    memcpy(arena->start + aligned_offset, src, sz);
+    arena->offset = aligned_offset + sz;
 
-    /* Write `sz` bytes at the current offset which is guaranteed to be an aligned value */
-    size_t current_offset = arena->offset;
-    memcpy(arena->start + current_offset, src, sz);
-    arena->offset = ALIGN_UP(current_offset + sz);
-    return current_offset;
+    return aligned_offset;
 }
