@@ -233,13 +233,18 @@ static bool set_operand_error(semantic_status stat, operator_type op, const toke
     const char *op_str = op_to_str(op);
     bool use_unary_version = false;
 
-    const char *left_str = left->user_str;
-    const char *right_str = right->user_str;
+    const char *left_str, *right_str;
 
-    /* Check if unary operand error case */
+    /* Check if unary operand error case. `right` should never be NULL */
+    assert(right != NULL);
     if (!left && right) {
+        left_str = NULL;
         use_unary_version = true;
     }
+    else {
+        left_str = left->user_str;
+    }
+    right_str = right->user_str;
 
     switch (stat) {
         case SEMANTIC_OK:
