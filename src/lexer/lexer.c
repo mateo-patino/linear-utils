@@ -397,8 +397,7 @@ FREE_UPON_ERROR_1:
     return NULL;
 
 FREE_UPON_ERROR_2:
-    free_token_objs_by_count(tokens, tc);
-    free(tokens);
+    fully_free_tokens(tokens, tc);
     free(m_str);
     return NULL;
 }
