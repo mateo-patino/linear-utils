@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 
 /*
@@ -117,6 +118,9 @@ static bool test_matrix_lexer_easy_valid(void) {
         ASSERT_TRUE(mat->nrow == case_t->nrow && mat->ncol == case_t->ncol);
         ASSERT_EQ_MATDATA(mat->data, case_t->expected_data, case_t->nrow * case_t->ncol);
 
+        ASSERT_TRUE(token->user_str != NULL);
+        ASSERT_TRUE(strcmp(token->user_str, case_t->str) == 0);
+
         fully_free_tokens(token, token_count);
     }
 
@@ -167,10 +171,33 @@ static const matrix_test_case_t medium_matrix_cases[] = {
     { "2x5\v1\f2\r3\t4\n5 6\v7\f8\r9\t10", 2, 5, medium_expect7 }
 };
 
+
+/* 
+* These are the expected strings that token->user_str should contain. All escape sequences
+* have been removed. We use this separate array instead of the `str` member in matrix_test_case_t
+* for the user_str comparison here (and here only) because the function that builds matrix user_str
+* strings in the lexer module discards escape sequences. This is the intended behavior, as it prints
+* a pretty string without any awkward newlines and escapes, but it does require us to do this hack
+* for this particular test.
+*/
+static const char *medium_expected_user_str[] = {
+    "3x3 1 2 3 4 5 6 7 8 9",
+    "3x4 1.5 -2 .25 3e2 -4.5 5 1E-6 -8E2 9.75 -10 11.125 12",
+    "4x3 0 -1 2 -3 4 -5 6 -7 8 -9 10 -11",
+    "1x8 0 +1 -1 .5 -.5 4. 6e1 -7E-2",
+    "8x1 10 20 30 40 50 60 70 80",
+    "03x002 1e-3 -2E+2 +3.5 .25 -0.0 4.",
+    "2x5 1 2 3 4 5 6 7 8 9 10"
+};
+
 /*
 * Test that medium-sized valid matrices are being correctly tokenized.
 */
 static bool test_matrix_lexer_medium_valid(void) {
+
+    /* Ensure the number of expected user_str's equals the number of test cases */
+    assert(ARRAY_LEN(medium_expected_user_str) == ARRAY_LEN(medium_matrix_cases));
+
     token_t *token;
     size_t token_count;
     tokens_status tok_status;
@@ -194,6 +221,9 @@ static bool test_matrix_lexer_medium_valid(void) {
         ASSERT_TRUE(mat->nrow == case_t->nrow && mat->ncol == case_t->ncol);
         ASSERT_EQ_MATDATA(mat->data, case_t->expected_data, case_t->nrow * case_t->ncol);
 
+        ASSERT_TRUE(token->user_str != NULL);
+        ASSERT_TRUE(strcmp(token->user_str, medium_expected_user_str[i]) == 0);
+        
         fully_free_tokens(token, token_count);
     }
 
