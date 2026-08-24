@@ -15,20 +15,8 @@
 * callers must interact with this library via the public functions 
 * provided.
 *
-* The arena is aligned using max_align_t, an alignment value defined in
-* stddef.h which equals the largest alignment required to align every 
-* object type in a system. Note that an alignment of, say, 16 correctly
-* aligns types with alignments of 1, 2, 4, 8 because these are multiples 
-* 16. max_align_t is sort of like 16 in this example. It is a value that
-* large enough to align every other possible type.
-*
-* A key convention of this interface is that `offset` and `capacity` will 
-* always be ALIGNED. 
-*
-* NEEDSWORK: using max_align_t adds a lot of padding bytes to the 
-* arena's memory block. We could reduce memory usage by using alignof()
-* and having callers pass an alignment value that is specific to the type
-* they want to allocate.
+* The arena uses type-specific alignments when allocating objects. Use _Alignof(T)
+* to get the alignment for a specific type and pass it to the allocator functions.
 */
 
 #include <stdlib.h>
@@ -89,11 +77,6 @@ void free_arena(arena_t *arena);
 */
 size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena);
 
-
-/*
-*
-*/
-size_t awrite_replace(char c, size_t target_offset, arena_t *arena);
 
 
 #endif
