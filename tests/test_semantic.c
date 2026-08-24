@@ -246,10 +246,10 @@ static bool test_invalid_semantic_medium(void) {
     scalar_t matrix_entries[] = { 1, INFINITY };
     matrix_t matrix = { 1, 2, matrix_entries };
 
-    token_t max_token = { SCALAR, &scalar_max };
-    token_t two_token = { SCALAR, &scalar_two };
-    token_t nan_token = { SCALAR, &scalar_nan };
-    token_t matrix_token = { MATRIX, &matrix };
+    token_t max_token = { SCALAR, &scalar_max, NULL };
+    token_t two_token = { SCALAR, &scalar_two, NULL };
+    token_t nan_token = { SCALAR, &scalar_nan, NULL };
+    token_t matrix_token = { MATRIX, &matrix, NULL };
 
     ASSERT_TRUE(valid_add_operands(&max_token, &max_token) == SEMANTIC_FP_OVERFLOW);
     ASSERT_TRUE(valid_mul_operands(&max_token, &two_token) == SEMANTIC_FP_OVERFLOW);
@@ -269,7 +269,6 @@ static bool test_invalid_semantic_medium(void) {
     clear_error();
     fixture = create_semantic_fixture("INF");
     st = is_semantically_valid_ast(fixture.ast, NULL);
-    printf("st %i\n", st);
     ASSERT_TRUE(st == SEMANTIC_INFINITE_OR_NAN_SCALAR);
     ASSERT_TRUE(has_error() == true);
     free_semantic_fixture(&fixture);
