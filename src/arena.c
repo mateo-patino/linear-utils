@@ -81,7 +81,7 @@ size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena) {
     }
 
     /* alignment should be a power of 2 returned by _Alignof */
-    if (!(alignment & (alignment - 1))) {
+    if (alignment & (alignment - 1)) {
         return SIZE_MAX;
     }
 
