@@ -179,3 +179,13 @@ bool is_operand_token(const token_t *tok) {
     }
     return tok->type == SCALAR || tok->type == MATRIX;
 }
+
+
+bool is_unary_operator_token(const token_t *token) {
+    if (!token || token->type != OPERATOR || !token->obj) {
+        return false;
+    }
+    operator_type op = *(operator_type *)token->obj;
+    return arity[op] == 1;
+}
+

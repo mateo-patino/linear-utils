@@ -115,4 +115,10 @@ void print_token(const token_t *tok);
 */
 bool is_operand_token(const token_t *tok);
 
+
+/*
+* Returns true of `token` is a unary operator token.
+*/
+bool is_unary_operator(const token_t *token);
+
 #endif

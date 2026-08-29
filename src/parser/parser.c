@@ -192,17 +192,6 @@ static int get_remaining_operand(const token_t *tokens, int low, int high) {
 }
 
 
-/*
-* Returns true of `token` is a unary operator token.
-*/
-static bool is_unary_operator(const token_t *token) {
-    if (!token || token->type != OPERATOR) {
-        return false;
-    }
-    operator_type op = *(operator_type *)token->obj;
-    return arity[op] == 1;
-}
-
 
 /*
 * Returns true if at least one operand token exists in the range [low, high]
@@ -340,7 +329,7 @@ node_t *create_ast_helper(const token_t *tokens, int low, int high) {
     * An operator token was found, so recurse on the right only for unary operators and on 
     * both sides for binary operators
     */
-    if (is_unary_operator(tokens + last_op_index)) {
+    if (is_unary_operator_token(tokens + last_op_index)) {
         
         /*
         * When a unary operator is the last operator to be evaluated in the window [low, high], 
