@@ -26,10 +26,15 @@
 #include "types/token.h"
 #include "parser/ast.h"
 
+typedef enum {
+    SCALAR_RES,
+    MATRIX_RES,
+} result_type;
+
 /* An expression's result could be a scalar_t or a matrix_t, so we use this wrapper
 * struct to contain a void * to that object. */
 typedef struct {
-    token_type type;
+    result_type type;
     void *obj;
 } result_t;
 
@@ -40,7 +45,10 @@ typedef struct {
 typedef enum {
     EVAL_OK,
     EVAL_INVALID_AST,
-    EVAL_MEMORY_FAILURE
+    EVAL_MEMORY_FAILURE,
+
+    /* A general error code for when a specific error cause is unknown but we must signal failure */
+    EVAL_FAILED 
 } eval_status;
 
 

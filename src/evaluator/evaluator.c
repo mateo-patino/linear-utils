@@ -4,6 +4,8 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
+#include <limits.h>
 
 
 /*
@@ -88,7 +90,7 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     * This memory arena will hold all of the matrix view objects
     * used during evaluation.
     */
-    arena_t *arena = create_arena(MiB(32));
+    arena_t *arena = create_arena(MiB(8));
 
     result_t *tmp = evaluate_subtree(ast->root, arena);  
     eval_status st = get_status();
@@ -113,10 +115,153 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
 }
 
 
+/*
+* Converts a token_t struct to a result_t struct.
+* It writes the new result_t struct in the memory arena `arena`,
+* and returns a pointer to the struct upon success and NULL upon 
+* failure.
+*
+* The function expects that token is a valid operand token (i.e. a scalar
+* or matrix).
+*/
+static result_t *token_to_result(const token_t *token, arena_t *arena) {
+    assert(is_operand_token(token) == true);
+
+    result_t *tmp = malloc(sizeof(result_t));
+    if (!tmp) {
+        return NULL;
+    }
+
+    if (token->type == SCALAR) {
+        tmp->type = SCALAR_RES;
+        tmp->obj = (scalar_t *)token->obj;
+    }
+    else if (token->type == MATRIX) {
+        tmp->type = MATRIX_RES;
+        tmp->obj = (matrix_t *)token->obj;
+    }
+
+    size_t offset = awrite((char *)tmp, sizeof(result_t), _Alignof(result_t), arena);
+    if (offset == SIZE_MAX) {
+        free(tmp);
+        return NULL;
+    }
+
+    free(tmp);
+    return (result_t *)(arena->start + offset);
+}
+
+
+/*
+* Dispatches the operation `op` to the linalg library with operands `left` and  `right`.
+*
+* It returns a pointer to a result_t struct containing the result of the operation upon
+* success and NULL otherwise.
+*/
+static result_t *perform_operation(opertor_type op, result_t *left, result_t *right, arena_t *arena) {
+    result_t *out;
+    switch (op) {
+
+        case ADD:
+            out = perform_add(left, right, arena);
+            break;
+
+        case SUB:
+            out = perform_sub(left, right, arena);
+            break;
+
+        case MUL:
+            out = perform_mul(left, right, arena);
+            break;
+        
+        case DIV:
+            out = perform_div(left, right, arena);
+            break;
+
+        case DET:
+            assert(left == NULL && right != NULL);
+            out = perform_det(right, arena);
+            break;
+
+        case RREF:
+            assert(left == NULL && right != NULL);
+            out = perform_rref(right, arena);
+            break;
+
+        case INV:
+            assert(left == NULL && right != NULL);
+            out = perform_inv(right, arena);
+            break;
+
+        case NUM_OP:
+        default:
+            RETURN_NULL_AND_STATUS(EVAL_INVALID_AST);
+    }
+
+    if (!out) {
+        /* Set the status to EVAL_FAILED in case a more specific error hasn't been set */
+        if (!has_error_status) {
+            RETURN_NULL_AND_STATUS(EVAL_FAILED);
+        }
+        return NULL;
+    }
+
+    return out;
+}
+
 
 /*
 * This is primary helper function to evaluate_ast function.
+*
+* This helper does not free the memory arena and does not write errors
+* to the global error buffer (this is done by evaluate_ast). It only
+* sets the internal status.
 */
+result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
+    if (!node) {
+        /* CHECK: i dont think we need this/might mistakenly report a failure */
+        RETURN_NULL_AND_STATUS(EVAL_INVALID_AST);
+    }
+    const token_t *token = node->token;
+    assert(token != NULL);
 
-result_t *evaluate_subtree(const node_t *node, arena_t *arena);
+    /* If token is an operand, return it as a result_t */
+    if (is_operand_token(token)) {
+        result_t *out = token_to_result(token, arena);
+        if (!out) {
+            RETURN_NULL_AND_STATUS(EVAL_MEMORY_FAILURE);
+        }
+        return out;
+    }
+
+    /* If not operand token, it must be an operator token, so recurse as appropriate */
+    assert(token->type == OPERATOR);
+    result_t *left, *right;
+
+    /*
+    * As is convention in this codebase, if a node is a unary operator,
+    * we set its left child to NULL and recurse on the right only.
+    */
+    if (is_unary_operator(token)) {
+        assert(node->left == NULL && node->right != NULL);
+        left = NULL;
+        right = evaluate_subtree(node->right, arena);
+    }
+    else {
+        assert(node->left != NULL && node->right != NULL);
+        left = evaluate_subtree(node->left, arena);
+        right = evaluate_subtree(node->right, arena);
+    }
+
+    /* Perform operation between `left` and `right` and return result */
+    assert(token->obj != NULL);
+    operator_type op = *(operator_type *)token->obj;
+
+    result_t *out = perform_operation(op, left, right, arena);
+    if (!out) {
+        /* perform_operation sets an internal status, so no need to set it here */
+        return NULL;
+    }
+    return out;
+}
 
