@@ -111,3 +111,12 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     free_arena(arena);
     return final;
 }
+
+
+
+/*
+* This is primary helper function to evaluate_ast function.
+*/
+
+result_t *evaluate_subtree(const node_t *node, arena_t *arena);
+
