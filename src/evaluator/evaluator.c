@@ -1,6 +1,9 @@
 #include "evaluator.h"
 #include "arena.h"
+#include "errorprinter.h"
+
 #include <stdbool.h>
+#include <string.h>
 
 
 /*
@@ -32,6 +35,28 @@ static void clear_status(void) {
 }
 
 
+/*
+* Writes an error message to the global buffer according to
+* the given eval_status code.
+*/
+static void set_status_errmsg(eval_status st) {
+    switch (st) {
+        case EVAL_OK:
+            set_error("AST evaluation successful");
+            return;
+        case EVAL_INVALID_AST:
+            set_error("Invalid AST (either NULL or root is NULL)");
+            return;
+        case EVAL_MEMORY_FAILURE:
+            set_error("Memory failure.");
+            return;
+        default:
+            set_error("Unknown eval status code");
+            return;
+    }
+}
+
+
 /* A common pattern is to set a status and return NULL */
 #define RETURN_NULL_AND_STATUS(x) \
     do { \
@@ -43,9 +68,9 @@ static void clear_status(void) {
 /* Set the CALLER's status and return NULL */
 #define RETURN_NULL_AND_CSTATUS(x, status) \
     do { \
-        eval_status *st = status; \
-        if (st) { \
-            *st = x; \
+        eval_status *_st = status; \
+        if (_st) { \
+            *_st = (eval_status)x; \
         } \
         return NULL; \
     } while (0) 
@@ -75,7 +100,7 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
 
     /* The result_t pointer returned by evaluate_subtree lives in the heap,
     * so copy to another address and return it */
-    result_t *final = malloc(sizeof(result));
+    result_t *final = malloc(sizeof(result_t));
     if (!final) {
         set_status_errmsg(EVAL_MEMORY_FAILURE);
         free_arena(arena);

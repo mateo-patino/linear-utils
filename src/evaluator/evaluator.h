@@ -39,7 +39,8 @@ typedef struct {
 */
 typedef enum {
     EVAL_OK,
-    EVAL_INVALID_AST
+    EVAL_INVALID_AST,
+    EVAL_MEMORY_FAILURE
 } eval_status;
 
 
