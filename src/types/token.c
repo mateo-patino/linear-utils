@@ -172,3 +172,10 @@ void print_token(const token_t *tok) {
             break;
     }
 }
+
+bool is_operand_token(const token_t *tok) {
+    if (!tok || !tok->obj) {
+        return false;
+    }
+    return tok->type == SCALAR || tok->type == MATRIX;
+}

@@ -109,4 +109,10 @@ void print_operator_enum(operator_type op);
 */
 void print_token(const token_t *tok);
 
+
+/*
+* Returns true if `tok` is a SCALAR or MATRIX 
+*/
+bool is_operand_token(const token_t *tok);
+
 #endif

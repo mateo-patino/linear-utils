@@ -155,13 +155,6 @@ static io_type get_output_type(operator_type op, io_type left, io_type right) {
 }
 
 
-static bool is_operand_token(const token_t *tok) {
-    if (!tok || !tok->obj) {
-        return false;
-    }
-    return tok->type == SCALAR || tok->type == MATRIX;
-}
-
 
 /*
 * Returns true if `node` has exactly two operand children.
