@@ -158,7 +158,7 @@ static result_t *token_to_result(const token_t *token, arena_t *arena) {
 * It returns a pointer to a result_t struct containing the result of the operation upon
 * success and NULL otherwise.
 */
-static result_t *perform_operation(opertor_type op, result_t *left, result_t *right, arena_t *arena) {
+static result_t *perform_operation(operator_type op, result_t *left, result_t *right, arena_t *arena) {
     result_t *out;
     switch (op) {
 
