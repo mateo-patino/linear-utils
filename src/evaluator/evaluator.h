@@ -55,6 +55,14 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status);
 
 /*
 * Recursively evaluates an AST subtree rooted at `node`.
+*
+* Upon succesful evaluation, it returns a pointer to a result_t
+* struct allocated in the memory arena `arena`. If an error
+* occurs during evaluation, NULL is returned and the internal
+* status is set to indicate the error.
+*
+* This function only sets the internal status and does not write 
+* to the global error buffer (that's handled by evaluate_ast).
 */
 result_t *evaluate_subtree(const node_t *node, arena_t *arena);
 
