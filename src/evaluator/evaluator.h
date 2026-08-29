@@ -2,6 +2,9 @@
 #define EVALUATOR_H
 
 
+#include "arena.h"
+
+
 /*
 * The evaluator module is responsible for evaluating an abstract syntax tree
 * (AST) produced by the parser module using the algebra library.
@@ -47,6 +50,12 @@ typedef enum {
 * will point to an object in the heap that must be freed by the caller.
 */
 result_t *evaluate_ast(const ast_t *ast, eval_status *status);
+
+
+/*
+* Recursively evaluates an AST subtree rooted at `node`.
+*/
+result_t *evaluate_subtree(const node_t *node, arena_t *arena);
 
 
 
