@@ -12,6 +12,7 @@
 #include "lexer/lexer.h"
 #include "parser/parser.h"
 #include "semantic/semantic.h"
+#include "evaluator/evaluator.h"
 #include "errorprinter.h"
 
 
@@ -88,7 +89,7 @@ int main(int argc, char **argv) {
         goto FREE_AST_AND_TOKENS_FAIL;
     }
 
-    /* Perform semantic checks on the AST */
+    /* Perform semantic (math) checks on the AST */
     io_type out_type;
     semantic_status sem_status = is_semantically_valid_ast(ast, &out_type);
     if (sem_status != SEMANTIC_OK) {
@@ -98,15 +99,10 @@ int main(int argc, char **argv) {
         goto FREE_AST_AND_TOKENS_FAIL;
     }
 
-    /*
-    * FIX: expressions as "3 det 2x2 1 1 1 1" do not produce
-    * any errors. These should be caught in the parser.
-    *
-    * After fixing this, implement the memory arena module and probably
-    * use it to tackle the richer tok_to_str version. You could probably also
-    * just use a static buffer to write nul-terminated character sequences.
-    */
-   
+    /* Evaluate the AST */
+    eval_status evaluate_status;
+    result_t *out = evaluate_ast(ast, &evaluate_status);
+
     inspect_tokens(tokens, token_count);
     fully_free_tokens(tokens, token_count);
     fully_free_ast(ast);
