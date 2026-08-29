@@ -171,15 +171,6 @@ static int find_last_op_index(const token_t *tokens, int low, int high) {
 }
 
 
-/* Returns true if `token` is a matrix, scalar, or another operand type. */
-static bool is_operand_type(const token_t *token) {
-    if (!token) {
-        return false;
-    }
-    return token->type == SCALAR || token->type == MATRIX;
-}
-
-
 /*
 * Returns the index inside of the range [low, high] of exactly one operand type.
 * If no operands exist or more than one does, -1 is returned.
@@ -187,7 +178,7 @@ static bool is_operand_type(const token_t *token) {
 static int get_remaining_operand(const token_t *tokens, int low, int high) {
     int index = -1;
     for (int i = low; i <= high; i++) {
-        if (is_operand_type(tokens + i)) {
+        if (is_operand_token(tokens + i)) {
             /* `index` must be -1 before setting it to a valid index value. *
                If `index` has been previously set and we attempt to set it again,
                more than one operand token must exist, so we return in failure. */
@@ -222,7 +213,7 @@ static bool has_any_operands(const token_t *tokens, int low, int high) {
     }
 
     for (int i = low; i <= high; i++) {
-        if (is_operand_type(tokens + i)) {
+        if (is_operand_token(tokens + i)) {
             return true;
         }
     }
