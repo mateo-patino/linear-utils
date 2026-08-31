@@ -31,8 +31,15 @@ typedef enum {
     MATRIX_RES,
 } result_type;
 
-/* An expression's result could be a scalar_t or a matrix_t, so we use this wrapper
-* struct to contain a void * to that object. */
+
+/*
+* The result_t struct is used as a wrapper around the scalar or matrix
+* outputs returned by each node triplet in the AST. An operation can yield
+* a scalar or a matrix, so the void *obj member in this struct shall point to 
+* either a `matrixv_t` or `scalar` object. Theese types are the structures
+* used by the linear algebra library. `obj` does NOT point to the `scalar_t`
+* or `matrix_t` objects used by the `lin` program.
+*/
 typedef struct {
     result_type type;
     void *obj;
