@@ -54,6 +54,9 @@ typedef enum {
     EVAL_INVALID_AST,
     EVAL_MEMORY_FAILURE,
 
+    /* When conversion form scalar_t/matrix_t to linalg's scalar/matrixv_t fails */
+    EVAL_TOKEN_CONVERSION_FAILED,
+
     /* A general error code for when a specific error cause is unknown but we must signal failure */
     EVAL_FAILED 
 } eval_status;
@@ -63,7 +66,12 @@ typedef enum {
 * Evaluates `ast` that is guaranteed to be semantically valid.
 *
 * Returns a pointer to a result_t struct. The `obj` member of this result_t 
-* will point to an object in the heap that must be freed by the caller.
+* will point to an object in the heap that must be freed by the caller. This
+* object will be either a matrixv_t or scalar struct from the linear algebra
+* library. TODO: should we translate the result_t to another data structure
+* that is agnostic of the linalg internal structs? as main and perhaps other
+* high-level callers might be reading from it and do not need to know about 
+* the view or scalar structs.
 */
 result_t *evaluate_ast(const ast_t *ast, eval_status *status);
 

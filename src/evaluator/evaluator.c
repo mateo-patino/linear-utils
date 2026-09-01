@@ -1,4 +1,7 @@
 #include "evaluator.h"
+#include "linalg/view.h"
+#include "types/token.h"
+#include "linalg/scalar.h"
 #include "arena.h"
 #include "errorprinter.h"
 
@@ -6,6 +9,7 @@
 #include <string.h>
 #include <assert.h>
 #include <limits.h>
+#include <stdio.h>
 
 
 /*
@@ -52,6 +56,9 @@ static void set_status_errmsg(eval_status st) {
         case EVAL_MEMORY_FAILURE:
             set_error("Memory failure.");
             return;
+        case EVAL_TOKEN_CONVERSION_FAILED:
+            set_error("'scalar_t' to 'scalar' or 'matrix_t' to 'matrixv_t' conversion failed.");
+            return;
         default:
             set_error("Unknown eval status code");
             return;
@@ -90,7 +97,7 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     * This memory arena will hold all of the matrix view objects
     * used during evaluation.
     */
-    arena_t *arena = create_arena(MiB(8));
+    arena_t *arena = create_arena(MiB(12));
 
     result_t *tmp = evaluate_subtree(ast->root, arena);  
     eval_status st = get_status();
@@ -101,7 +108,11 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     }
 
     /* The result_t pointer returned by evaluate_subtree lives in the heap,
-    * so copy to another address and return it */
+    * so copy to another address and return it.
+    *
+    * TODO: consider translating the result_t object retured by evaluate_subtree
+    * to anothet struct that is agnostic of the linalg module.
+    */
     result_t *final = malloc(sizeof(result_t));
     if (!final) {
         set_status_errmsg(EVAL_MEMORY_FAILURE);
@@ -134,12 +145,16 @@ static result_t *token_to_result(const token_t *token, arena_t *arena) {
 
     if (token->type == SCALAR) {
         tmp->type = SCALAR_RES;
-        tmp->obj = (scalar_t *)token->obj;
+        tmp->obj = create_linalg_scalar(*(scalar_t *)token->obj, arena);
     }
     else if (token->type == MATRIX) {
         tmp->type = MATRIX_RES;
-        tmp->obj = (matrix_t *)token->obj;
+        tmp->obj = create_matrix_view((matrix_t *)token->obj, arena);
     }
+
+    if (!tmp->obj) {
+        RETURN_NULL_AND_STATUS(EVAL_TOKEN_CONVERSION_FAILED);
+    } 
 
     size_t offset = awrite((char *)tmp, sizeof(result_t), _Alignof(result_t), arena);
     if (offset == SIZE_MAX) {
@@ -154,11 +169,25 @@ static result_t *token_to_result(const token_t *token, arena_t *arena) {
 
 /*
 * Dispatches the operation `op` to the linalg library with operands `left` and  `right`.
+* It converts left and right to data structures used by linear algebra library.
 *
 * It returns a pointer to a result_t struct containing the result of the operation upon
 * success and NULL otherwise.
 */
 static result_t *perform_operation(operator_type op, result_t *left, result_t *right, arena_t *arena) {
+    assert(left != NULL && right != NULL);
+
+    /* Transform `left` and `right` into `scalar` and/or `matrixv_t` (structs used by the linalg library) */
+    void* left_in, *right_in;
+    if (left->type == SCALAR_RES) {
+        /* `scalar` is a linalg type while `scalar_t` is `lin` type. TODO: check each type has same number of bytes? */
+        left_in = (scalar *)left->obj;
+    }
+    else if (left->type == MATRIX_RES) {
+        left_in = convert_to_matrix_view()
+    }
+
+
     result_t *out;
     switch (op) {
 
@@ -227,8 +256,9 @@ result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
 
     /* If token is an operand, return it as a result_t */
     if (is_operand_token(token)) {
+        /* token_to_result sets status to EVAL_TOKEN_CONVERSION_FAILED upon failure */
         result_t *out = token_to_result(token, arena);
-        if (!out) {
+        if (!out && !has_error_status) {
             RETURN_NULL_AND_STATUS(EVAL_MEMORY_FAILURE);
         }
         return out;
