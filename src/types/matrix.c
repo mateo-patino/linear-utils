@@ -66,7 +66,7 @@ matrixv_t* create_matrix_view(const matrix_t *matrix, arena_t *arena) {
 
     /* 
     * Write the array of `scalar` data to the memory arena. 
-    * Matrix views will hence point to locations in the arena.
+    * Matrix views' data will hence point to locations in the arena.
     */
     const size_t data_offset = awrite((char *)temp_data, nentry * sizeof(scalar), _Alignof(scalar), arena);
     if (data_offset == SIZE_MAX) {
@@ -75,11 +75,9 @@ matrixv_t* create_matrix_view(const matrix_t *matrix, arena_t *arena) {
     }
 
     /* Initialize the view in a temporary location and copy it to the arena */
-    matrixv_t *temp_view = malloc(sizeof(matrixv_t));
-    if (!temp_view) {
-        free(temp_data);
-        return NULL;
-    }
+    matrixv_t view;
+    matrixv_t *temp_view = &view;
+
     temp_view->data = (scalar *)(arena->start + data_offset);
 
     temp_view->ncol = (size_t)matrix->ncol;
@@ -98,6 +96,5 @@ matrixv_t* create_matrix_view(const matrix_t *matrix, arena_t *arena) {
     }
 
     free(temp_data);
-    free(temp_view);
     return out;
 }
