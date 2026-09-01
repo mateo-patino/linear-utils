@@ -2,6 +2,8 @@
 
 #include "token.h"
 #include "matrix.h"
+#include "arena.h"
+#include "limits.h"
 
 /* Table of operator arities */
 const char arity[NUM_OP] = {
@@ -187,5 +189,21 @@ bool is_unary_operator_token(const token_t *token) {
     }
     operator_type op = *(operator_type *)token->obj;
     return arity[op] == 1;
+}
+
+
+scalar *create_linalg_scalar(scalar_t val, arena_t *arena) {
+    /* 
+    * `scalar_t` is from `lin` while `scalar` is from the linalg library.
+    * Ideally, they should always have the same size/precision. 
+    */
+    if (sizeof(scalar_t) > sizeof(scalar)) {
+        fprintf(stderr, "WARNING: the linear algebra engine uses floating-point types of smaller"
+                        " byte size than `lin`. Loss of information is likely.\n");
+    }
+    scalar x = (scalar)val;
+    size_t offset = awrite((char *)&x, sizeof(scalar), _Alignof(scalar), arena);
+
+    return offset == SIZE_MAX ? NULL : (scalar *)(arena->start + offset);
 }
 

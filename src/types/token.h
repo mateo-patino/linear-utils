@@ -3,7 +3,9 @@
 
 #include <stdlib.h>
 
+#include "linalg/scalar.h"
 #include "matrix.h"
+#include "arena.h"
 
 /*
 * This file defines the basic data types used by this program.
@@ -120,5 +122,15 @@ bool is_operand_token(const token_t *tok);
 * Returns true of `token` is a unary operator token.
 */
 bool is_unary_operator(const token_t *token);
+
+
+
+/*
+* Writes a `scalar` type from the linalg module (i.e. not `scalar_t`)
+* to the memory arena `arena` and returns a pointer to it.
+*
+* It returns NULL upon failure.
+*/
+scalar *create_linalg_scalar(scalar_t val, arena_t *arena);
 
 #endif
