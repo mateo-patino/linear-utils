@@ -138,11 +138,9 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
 static result_t *token_to_result(const token_t *token, arena_t *arena) {
     assert(is_operand_token(token) == true);
 
-    result_t *tmp = malloc(sizeof(result_t));
-    if (!tmp) {
-        return NULL;
-    }
-
+    result_t result = {0};
+    result_t *tmp = &result;
+    
     if (token->type == SCALAR) {
         tmp->type = SCALAR_RES;
         tmp->obj = create_linalg_scalar(*(scalar_t *)token->obj, arena);
@@ -158,35 +156,31 @@ static result_t *token_to_result(const token_t *token, arena_t *arena) {
 
     size_t offset = awrite((char *)tmp, sizeof(result_t), _Alignof(result_t), arena);
     if (offset == SIZE_MAX) {
-        free(tmp);
         return NULL;
     }
 
-    free(tmp);
     return (result_t *)(arena->start + offset);
 }
 
 
 /*
+* do addition
+*/
+static result_t *perform_add(const result_t *left, const result* right, arena_t *arena) {
+     
+}
+
+
+/*
 * Dispatches the operation `op` to the linalg library with operands `left` and  `right`.
-* It converts left and right to data structures used by linear algebra library.
+* `left` and `right` MUST point to data structures used by the linalg library (`scalar`
+* and `matrixv_t`). The perform_* functions do not 
 *
 * It returns a pointer to a result_t struct containing the result of the operation upon
 * success and NULL otherwise.
 */
 static result_t *perform_operation(operator_type op, result_t *left, result_t *right, arena_t *arena) {
     assert(left != NULL && right != NULL);
-
-    /* Transform `left` and `right` into `scalar` and/or `matrixv_t` (structs used by the linalg library) */
-    void* left_in, *right_in;
-    if (left->type == SCALAR_RES) {
-        /* `scalar` is a linalg type while `scalar_t` is `lin` type. TODO: check each type has same number of bytes? */
-        left_in = (scalar *)left->obj;
-    }
-    else if (left->type == MATRIX_RES) {
-        left_in = convert_to_matrix_view()
-    }
-
 
     result_t *out;
     switch (op) {
