@@ -47,7 +47,9 @@ bool have_equal_dimensions(const matrix_t *a, const matrix_t *b);
 
 /*
 * Creates a linalg matrix view (matrixv_t) from a matrix_t struct `matrix`.
-* The matrixv_t is allocated in the memory arena `arena`.
+* The matrixv_t is allocated in the memory arena `arena`. The view's data
+* entries are also allocated in the arena. Hence, the matrix view will point
+* to data inside of the arena. 
 *
 * A pointer to the new matrixv_t struct created is returned upon sucess
 * and NULL upon failure.
