@@ -4,6 +4,9 @@
 #include <stdbool.h>
 #include <float.h>
 
+#include "linalg/view.h"
+#include "arena.h"
+
 /* Scalar type */
 typedef double scalar_t;
 #define PRISCALAR "%.*f"
@@ -40,5 +43,15 @@ matrix_t *init_matrix(scalar_t *data, unsigned int nrow, unsigned int ncol);
 * Returns true if `a` and `b` have the same dimensions
 */
 bool have_equal_dimensions(const matrix_t *a, const matrix_t *b);
+
+
+/*
+* Creates a linalg matrix view (matrixv_t) from a matrix_t struct `matrix`.
+* The matrixv_t is allocated in the memory arena `arena`.
+*
+* A pointer to the new matrixv_t struct created is returned upon sucess
+* and NULL upon failure.
+*/
+matrixv_t* create_matrix_view(const matrix_t *matrix, arena_t *arena);
 
 #endif
