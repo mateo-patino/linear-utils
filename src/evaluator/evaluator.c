@@ -216,7 +216,7 @@ static matrixv_t *allocate_view_with_data(size_t nentry, arena_t *arena) {
 
 
 /*
-* Allocates and sets up the output view struct for operations `op`
+* Allocates and sets up the output view struct for operation an `op`
 * with matrix operands. 
 *
 * It returns a pointer to a matrix view allocated on `arena` 
@@ -278,7 +278,6 @@ static result_t *ss_add(const result_t *left, const result_t *right, arena_t *ar
     if (!left || !right) {
         return NULL;
     }
-
     result_t tmp;
 
     scalar l_val = *(scalar *)left->obj;
@@ -300,7 +299,6 @@ static result_t *mm_add(const result_t *left, const result_t *right, arena_t *ar
     if (!left || !right || !left->obj || !right->obj) {
         return NULL;
     }
-
     result_t tmp;
 
     /* Compute output matrix */
@@ -326,8 +324,39 @@ static result_t *ss_sub(const result_t *left, const result_t *right, arena_t *ar
     if (!left || !right || !left->obj || !right->obj) {
         return NULL;
     }
+    result_t tmp;
 
-    
+    scalar l_val = *(scalar *)left->obj;
+    scalar r_val = *(scalar *)right->obj;
+
+    tmp.type = SCALAR_RES;
+    tmp.obj = copy_scalar(l_val - r_val, arena);
+
+    if (!tmp.obj) {
+        return NULL;
+    }
+
+    return copy_result(&tmp, arena);
+}
+
+
+/* Matrix-matrix subtraction */
+static result_t *mm_sub(const result_t *left, const result_t *right, arena_t *arena) {
+    if (!left || !right || !left->obj || !right->obj) {
+        return NULL;
+    }
+    result_t tmp;
+
+    matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
+    matrixv_t *C = initialize_output_view(SUB, A, B, arena);
+    if (matrix_sub(C, A, B) == -1) {
+        return NULL;
+    }
+
+    tmp.type = MATRIX_RES;
+    tmp.obj = C; 
+
+    return copy_result(&tmp, arena);
 }
 
 
