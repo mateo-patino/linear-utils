@@ -7,8 +7,8 @@
 * arenas are wrapped around a arena_t struct, which contains three
 * members: `start` which is a pointer to the first byte in the arena,
 * `capacity` which is the number of bytes in the arena, and `offset`
-* which is a pointer to the address where the next byte would be
-* written.
+* which is an integer offset to the address from `start` where the next 
+* byte would be written.
 *
 * Callers to this interface should not modify arena_t. This struct is
 * meant to be used exclusively by the functions in this module. Instead,
@@ -63,9 +63,11 @@ void free_arena(arena_t *arena);
 
 
 /*
-* Writes `sz` bytes from the address `src` to `arena`. In other words,
-* this function allocates an object of `sz` bytes pointer at by `src`
-* to the memory arena owned by the `arena` struct.
+* Writes `sz` bytes from the address `src` to `arena` if `src` is not NULL. 
+* In other words, this function deep copies an object of `sz` bytes pointed 
+* at by `src` to the memory arena owned by the `arena` struct. If `src` is
+* NULL, no data is copied and `sz` bytes are made available to the caller to
+* use as desired.
 *
 * If the arena cannot fit the new object, the arena gets resized 
 * automatically.

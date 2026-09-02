@@ -76,7 +76,7 @@ void free_arena(arena_t *arena) {
 
 
 size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena) {
-    if (!arena || !src || !sz || sz > MAX_CAPACITY || !alignment) {
+    if (!arena || !sz || sz > MAX_CAPACITY || !alignment) {
         return SIZE_MAX;
     }
 
@@ -99,8 +99,14 @@ size_t awrite(const char *src, size_t sz, size_t alignment, arena_t *arena) {
         arena->capacity = new_capacity;
     }
     
-    /* Write `sz` bytes at the closest aligned offset */
-    memcpy(arena->start + aligned_offset, src, sz);
+    /* 
+    * Copy `sz` bytes at the closest aligned offset if `src` is not NULL,
+    * otherwise simply advance the offset and let the caller do whatever 
+    * they please with those `sz` bytes skipped.
+    */
+    if (src) {
+        memcpy(arena->start + aligned_offset, src, sz);
+    }
     arena->offset = aligned_offset + sz;
 
     return aligned_offset;
