@@ -192,7 +192,7 @@ bool is_unary_operator_token(const token_t *token) {
 }
 
 
-scalar *create_linalg_scalar(scalar_t val, arena_t *arena) {
+scalar *to_linalg_scalar(scalar_t val, arena_t *arena) {
     /* 
     * `scalar_t` is from `lin` while `scalar` is from the linalg library.
     * Ideally, they should always have the same size/precision. 

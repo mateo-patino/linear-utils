@@ -131,6 +131,6 @@ bool is_unary_operator(const token_t *token);
 *
 * It returns NULL upon failure.
 */
-scalar *create_linalg_scalar(scalar_t val, arena_t *arena);
+scalar *to_linalg_scalar(scalar_t val, arena_t *arena);
 
 #endif
