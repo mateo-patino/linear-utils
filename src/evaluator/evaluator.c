@@ -1,7 +1,8 @@
 #include "evaluator.h"
 #include "linalg/view.h"
-#include "types/token.h"
+#include "linalg/arithmetic.h"
 #include "linalg/scalar.h"
+#include "types/token.h"
 #include "arena.h"
 #include "errorprinter.h"
 
@@ -211,8 +212,6 @@ static result_t *ss_add(const result_t *left, const result_t *right, arena_t *ar
     scalar r_val = *(scalar *)right->obj;
 
     tmp->type = SCALAR_RES;
-
-    /* scalars are allocated in the arena */
     tmp->obj = copy_scalar(l_val + r_val, arena);
 
     if (!tmp->obj) {
@@ -224,17 +223,37 @@ static result_t *ss_add(const result_t *left, const result_t *right, arena_t *ar
 
 
 /*
-* Matrix-matrix addition
+* Matrix-matrix addition.
 */
 static matrixv_t *mm_add_helper(const matrixv_t *left, const matrixv_t *right, arena_t *arena) {
-    matrixv_t tmp_C;
-    matrixv_t *C = &tmp_C;
+    assert(left->ncol == right->ncol && left->nrow == right->nrow);
 
-    C
+    size_t ncol = left->ncol;
+    size_t nrow = left->nrow;
 
+    size_t nentry = ncol * nrow;
+    matrixv_t *out = allocate_view_with_data(nentry, arena);
+
+    if (!out) {
+        return NULL;
+    }
+
+    out->ncol = ncol;
+    out->nrow = nrow;
+    
+    /* VERIFY: can the row and column strides be initialized to 1 naively/always? */
+    out->column_stride = 1;
+    out->row_stride = 1;
+
+    if (matrix_add(out, (matrixv_t *)left, (matrixv_t *)right) == -1) {
+        return NULL;
+    }
+
+    return out;
+}
 
 static result_t *mm_add(const result_t *left, const result_t *right, arena_t *arena) {
-    if (!left || !right) {
+    if (!left || !right || !left->obj || !right->obj) {
         return NULL;
     }
 
@@ -242,10 +261,13 @@ static result_t *mm_add(const result_t *left, const result_t *right, arena_t *ar
     result_t *tmp = &tmp_result;
     
     tmp->type = MATRIX_RES;
-    tmp->obj = 
+    tmp->obj = mm_add_helper(left->obj, right->obj, arena);
 
-    
+    if (!tmp->obj) {
+        return NULL;
+    }
 
+    return copy_result(tmp, arena); 
 }
 
 
