@@ -162,12 +162,31 @@ static result_t *token_to_result(const token_t *token, arena_t *arena) {
     return (result_t *)(arena->start + offset);
 }
 
-
 /*
-* do addition
+* scalar-scalar addition 
 */
-static result_t *perform_add(const result_t *left, const result* right, arena_t *arena) {
-     
+static result_t *ss_add(const result_t *left, const result_t *right, arena_t *arena) {
+    if (!left || !right) {
+        return NULL;
+    }
+    result_t result;
+    result_t *tmp = &result;
+    
+    tmp->type = SCALAR_RES;
+
+    scalar val = (*(scalar *)left->obj) + (*(scalar *)right->obj);
+    const size_t val_offset = awrite((char *)&val, sizeof(scalar), _Alignof(scalar), arena);
+    if (val_offset == SIZE_MAX) {
+        return NULL;
+    }
+    tmp->obj = arena->start + val_offset;
+
+    const size_t result_offset = awrite((char *)&result, sizeof(result_t), _Alignof(result_t), arena);
+    if (result_offset == SIZE_MAX) {
+        return NULL;
+    }
+    
+    return (result_t *)(arena->start + result_offset);
 }
 
 
@@ -186,7 +205,11 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
     switch (op) {
 
         case ADD:
-            out = perform_add(left, right, arena);
+            if (left->type == SCALAR_RES && right->type == SCALAR_RES) {
+                out = ss_add(left, right, arena); /* will add more */
+            }
+            assert(left->type == MATRIX_RES && right->type == MATRIX_RES);
+            out = mm_add(left, right, arena);
             break;
 
         case SUB:
