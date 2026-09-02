@@ -85,44 +85,17 @@ static void set_status_errmsg(eval_status st) {
     } while (0) 
 
 
-result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
-    if (!ast || !ast->root) {
-        RETURN_NULL_AND_CSTATUS(EVAL_INVALID_AST, status);
+static result_t *allocate_result(const result_t *tmp, arena_t *arena) {
+    if (!tmp || !arena) {
+        return NULL;
+    }
+    const size_t offset = awrite((char *)tmp, sizeof(result_t), _Alignof(result_t), arena);
+
+    if (offset == SIZE_MAX) {
+        return NULL;
     }
 
-    /* Set internal status to OK before starting */
-    clear_status();
-    
-    /* 
-    * This memory arena will hold all of the matrix view objects
-    * used during evaluation.
-    */
-    arena_t *arena = create_arena(MiB(12));
-
-    result_t *tmp = evaluate_subtree(ast->root, arena);  
-    eval_status st = get_status();
-    if (st != EVAL_OK) {
-        set_status_errmsg(st);
-        free_arena(arena);
-        RETURN_NULL_AND_CSTATUS(st, status);
-    }
-
-    /* The result_t pointer returned by evaluate_subtree lives in the heap,
-    * so copy to another address and return it.
-    *
-    * TODO: consider translating the result_t object retured by evaluate_subtree
-    * to anothet struct that is agnostic of the linalg module.
-    */
-    result_t *final = malloc(sizeof(result_t));
-    if (!final) {
-        set_status_errmsg(EVAL_MEMORY_FAILURE);
-        free_arena(arena);
-        RETURN_NULL_AND_CSTATUS(EVAL_MEMORY_FAILURE, status);
-    }
-    memcpy(final, tmp, sizeof(result_t));
-
-    free_arena(arena);
-    return final;
+    return (result_t *)(arena->start + offset);
 }
 
 
@@ -138,12 +111,12 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
 static result_t *token_to_result(const token_t *token, arena_t *arena) {
     assert(is_operand_token(token) == true);
 
-    result_t result = {0};
+    result_t result;
     result_t *tmp = &result;
     
     if (token->type == SCALAR) {
         tmp->type = SCALAR_RES;
-        tmp->obj = create_linalg_scalar(*(scalar_t *)token->obj, arena);
+        tmp->obj = to_linalg_scalar(*(scalar_t *)token->obj, arena);
     }
     else if (token->type == MATRIX) {
         tmp->type = MATRIX_RES;
@@ -154,39 +127,46 @@ static result_t *token_to_result(const token_t *token, arena_t *arena) {
         RETURN_NULL_AND_STATUS(EVAL_TOKEN_CONVERSION_FAILED);
     } 
 
-    size_t offset = awrite((char *)tmp, sizeof(result_t), _Alignof(result_t), arena);
+    return allocate_result(tmp, arena);
+}
+
+
+static scalar *allocate_scalar(scalar val, arena_t *arena) {
+    if (!arena) {
+        return NULL;
+    }
+    const size_t offset = awrite((char *)&val, sizeof(scalar), _Alignof(scalar), arena);
+
     if (offset == SIZE_MAX) {
         return NULL;
     }
 
-    return (result_t *)(arena->start + offset);
+    return (scalar *)(arena->start + offset);
 }
 
+
 /*
-* scalar-scalar addition 
+* Scalar-scalar addition
 */
-static result_t *ss_add(const result_t *left, const result_t *right, arena_t *arena) {
+static result_t *ss_add(result_t *left, result_t *right, arena_t *arena) {
     if (!left || !right) {
         return NULL;
     }
-    result_t result;
-    result_t *tmp = &result;
-    
+
+    result_t tmp_result;
+    result_t *tmp = &tmp_result;
+
+    scalar l_val = *(scalar *)left->obj;
+    scalar r_val = *(scalar *)right->obj;
+
     tmp->type = SCALAR_RES;
+    tmp->obj = allocate_scalar(l_val + r_val, arena);
 
-    scalar val = (*(scalar *)left->obj) + (*(scalar *)right->obj);
-    const size_t val_offset = awrite((char *)&val, sizeof(scalar), _Alignof(scalar), arena);
-    if (val_offset == SIZE_MAX) {
-        return NULL;
-    }
-    tmp->obj = arena->start + val_offset;
-
-    const size_t result_offset = awrite((char *)&result, sizeof(result_t), _Alignof(result_t), arena);
-    if (result_offset == SIZE_MAX) {
+    if (!tmp->obj) {
         return NULL;
     }
     
-    return (result_t *)(arena->start + result_offset);
+    return allocate_result(tmp, arena);
 }
 
 
@@ -253,6 +233,47 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
     }
 
     return out;
+}
+
+
+result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
+    if (!ast || !ast->root) {
+        RETURN_NULL_AND_CSTATUS(EVAL_INVALID_AST, status);
+    }
+
+    /* Set internal status to OK before starting */
+    clear_status();
+    
+    /* 
+    * This memory arena will hold all of the matrix view objects
+    * used during evaluation.
+    */
+    arena_t *arena = create_arena(MiB(12));
+
+    result_t *tmp = evaluate_subtree(ast->root, arena);  
+    eval_status st = get_status();
+    if (st != EVAL_OK) {
+        set_status_errmsg(st);
+        free_arena(arena);
+        RETURN_NULL_AND_CSTATUS(st, status);
+    }
+
+    /* The result_t pointer returned by evaluate_subtree lives in the heap,
+    * so copy to another address and return it.
+    *
+    * TODO: consider translating the result_t object retured by evaluate_subtree
+    * to anothet struct that is agnostic of the linalg module.
+    */
+    result_t *final = malloc(sizeof(result_t));
+    if (!final) {
+        set_status_errmsg(EVAL_MEMORY_FAILURE);
+        free_arena(arena);
+        RETURN_NULL_AND_CSTATUS(EVAL_MEMORY_FAILURE, status);
+    }
+    memcpy(final, tmp, sizeof(result_t));
+
+    free_arena(arena);
+    return final;
 }
 
 
