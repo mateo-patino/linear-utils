@@ -155,6 +155,23 @@ static scalar *copy_scalar(scalar val, arena_t *arena) {
 
 
 /*
+* Copy (allocate) a matrix view `tmp` to `arena`.
+*/
+static matrixv_t *copy_view(const matrixv_t *tmp, arena_t *arena) {
+    if (!tmp || !arena) {
+        return NULL;
+    }
+
+    const size_t offset = awrite((char *)tmp, sizeof(matrixv_t), _Alignof(matrixv_t), arena);
+    if (offset == SIZE_MAX) {
+        return NULL;
+    }
+
+    return (matrixv_t *)(arena->start + offset);
+}
+
+
+/*
 * Allocates memory for `nentry` scalar values in `arena`.
 * All values are initialized to 0.
 *
@@ -197,77 +214,120 @@ static matrixv_t *allocate_view_with_data(size_t nentry, arena_t *arena) {
     return (matrixv_t *)(arena->start + offset);
 }
 
+
 /*
-* Scalar-scalar addition
+* Allocates and sets up the output view struct for operations `op`
+* with matrix operands. 
+*
+* It returns a pointer to a matrix view allocated on `arena` 
+* with values initialized before the operation. 
+*
+* The `data` pointer points to an address with enough space to
+* accomodate the result of the operation.
 */
+static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left, const matrixv_t *right, arena_t *arena) {
+    if (!left || !right) {
+        return NULL;
+    }
+
+    matrixv_t tmp_view = {0};
+    matrixv_t *tmp = &tmp_view;
+    size_t nrow = 0, ncol = 0;
+
+    switch (op) {
+
+        case ADD:
+        case SUB:
+            assert(left->ncol == right->ncol && left->nrow == right->nrow);
+            nrow = left->nrow; 
+            ncol = left->ncol;
+
+            tmp->nrow = nrow;
+            tmp->ncol = ncol;
+
+            /* VERIFY: can the row and column strides be initialized to 1 naively/always? */
+            tmp->column_stride = 1;
+            tmp->row_stride = 1;
+
+            tmp->data = allocate_scalars(nrow * ncol, arena);
+            if (!tmp->data) {
+                return NULL;
+            }
+            break;
+
+        case MUL:
+            /* TODO */
+            break;
+
+        default:
+            /* TODO */
+            break;
+    }
+
+    /* Copy the temporary view struct to the arena */
+    return copy_view(tmp, arena);
+}
+
+
+/************************************
+* ADDITION
+************************************/
+
+/* Scalar-scalar addition */
 static result_t *ss_add(const result_t *left, const result_t *right, arena_t *arena) {
     if (!left || !right) {
         return NULL;
     }
 
-    result_t tmp_result;
-    result_t *tmp = &tmp_result;
+    result_t tmp;
 
     scalar l_val = *(scalar *)left->obj;
     scalar r_val = *(scalar *)right->obj;
 
-    tmp->type = SCALAR_RES;
-    tmp->obj = copy_scalar(l_val + r_val, arena);
+    tmp.type = SCALAR_RES;
+    tmp.obj = copy_scalar(l_val + r_val, arena);
 
-    if (!tmp->obj) {
+    if (!tmp.obj) {
         return NULL;
     }
     
-    return copy_result(tmp, arena);
+    return copy_result(&tmp, arena);
 }
 
 
-/*
-* Matrix-matrix addition.
-*/
-static matrixv_t *mm_add_helper(const matrixv_t *left, const matrixv_t *right, arena_t *arena) {
-    assert(left->ncol == right->ncol && left->nrow == right->nrow);
-
-    size_t ncol = left->ncol;
-    size_t nrow = left->nrow;
-
-    size_t nentry = ncol * nrow;
-    matrixv_t *out = allocate_view_with_data(nentry, arena);
-
-    if (!out) {
-        return NULL;
-    }
-
-    out->ncol = ncol;
-    out->nrow = nrow;
-    
-    /* VERIFY: can the row and column strides be initialized to 1 naively/always? */
-    out->column_stride = 1;
-    out->row_stride = 1;
-
-    if (matrix_add(out, (matrixv_t *)left, (matrixv_t *)right) == -1) {
-        return NULL;
-    }
-
-    return out;
-}
-
+/* Matrix-matrix addition */
 static result_t *mm_add(const result_t *left, const result_t *right, arena_t *arena) {
     if (!left || !right || !left->obj || !right->obj) {
         return NULL;
     }
 
-    result_t tmp_result;
-    result_t *tmp = &tmp_result;
-    
-    tmp->type = MATRIX_RES;
-    tmp->obj = mm_add_helper(left->obj, right->obj, arena);
+    result_t tmp;
 
-    if (!tmp->obj) {
+    /* Compute output matrix */
+    matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
+    matrixv_t *C = initialize_output_view(ADD, A, B, arena);
+    if (matrix_add(C, A, B) == -1) {
+        return NULL;    
+    }
+    
+    tmp.type = MATRIX_RES;
+    tmp.obj = C;
+
+    return copy_result(&tmp, arena); 
+}
+
+
+/************************************
+* SUBTRACTION
+************************************/
+
+/* Scalar-scalar subtraction */
+static result_t *ss_sub(const result_t *left, const result_t *right, arena_t *arena) {
+    if (!left || !right || !left->obj || !right->obj) {
         return NULL;
     }
 
-    return copy_result(tmp, arena); 
+    
 }
 
 
@@ -283,6 +343,8 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
     assert(left != NULL && right != NULL);
 
     result_t *out;
+    eval_status st = EVAL_OK;
+
     switch (op) {
 
         case ADD:
@@ -291,10 +353,18 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
             }
             assert(left->type == MATRIX_RES && right->type == MATRIX_RES);
             out = mm_add(left, right, arena);
+
+            if (!out) { st = EVAL_ADD_FAILED; }
             break;
 
         case SUB:
-            out = perform_sub(left, right, arena);
+            if (left->type == SCALAR_RES && right->type == SCALAR_RES) {
+                out = ss_sub(left, right, arena);
+            }
+            assert(left->type == MATRIX_RES && right->type == MATRIX_RES);
+            out = mm_sub(left, right, arena);
+
+            if (!out) { st = EVAL_SUB_FAILED; }
             break;
 
         case MUL:
@@ -302,6 +372,7 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
             break;
         
         case DIV:
+            assert(left->type == SCALAR_RES && right->type == SCALAR_RES);
             out = perform_div(left, right, arena);
             break;
 
@@ -326,11 +397,7 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
     }
 
     if (!out) {
-        /* Set the status to EVAL_FAILED in case a more specific error hasn't been set */
-        if (!has_error_status) {
-            RETURN_NULL_AND_STATUS(EVAL_FAILED);
-        }
-        return NULL;
+        RETURN_NULL_AND_STATUS(st);
     }
 
     return out;
