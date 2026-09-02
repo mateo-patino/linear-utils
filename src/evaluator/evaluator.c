@@ -85,7 +85,11 @@ static void set_status_errmsg(eval_status st) {
     } while (0) 
 
 
-static result_t *allocate_result(const result_t *tmp, arena_t *arena) {
+/*
+* Copy (allocate) a result_t at `tmp` to an arena.
+* A pointer to the new struct in the arena is returned.
+*/
+static result_t *copy_result(const result_t *tmp, arena_t *arena) {
     if (!tmp || !arena) {
         return NULL;
     }
@@ -127,11 +131,15 @@ static result_t *token_to_result(const token_t *token, arena_t *arena) {
         RETURN_NULL_AND_STATUS(EVAL_TOKEN_CONVERSION_FAILED);
     } 
 
-    return allocate_result(tmp, arena);
+    return copy_result(tmp, arena);
 }
 
 
-static scalar *allocate_scalar(scalar val, arena_t *arena) {
+/*
+* Copy (allocate) a scalar value to an arena.
+* A pointer to the scalar in the arena is returned.
+*/
+static scalar *copy_scalar(scalar val, arena_t *arena) {
     if (!arena) {
         return NULL;
     }
@@ -146,9 +154,52 @@ static scalar *allocate_scalar(scalar val, arena_t *arena) {
 
 
 /*
+* Allocates memory for `nentry` scalar values in `arena`.
+* All values are initialized to 0.
+*
+* A pointer to the first scalar value is returned upon succes.
+*/
+static scalar *allocate_scalars(size_t nentry, arena_t *arena) {
+    const size_t offset = awrite(NULL, nentry * sizeof(scalar), _Alignof(scalar), arena);
+    
+    if (offset == SIZE_MAX) {
+        return NULL;
+    }
+
+    scalar *out = (scalar *)(arena->start + offset);
+    memset(out, 0, nentry);
+
+    return out;
+}
+
+
+/*
+* Allocates a matrix view to the arena AND allocates the corresponding 
+* memory for `nentry` data values.
+*
+* It returns a pointer to the matrix view upon success and NULL upon failure.
+* All values in the arena will be initialized to zero/default except the `data`
+* pointer which will point to an address containing `nentry` scalar values.
+*/
+static matrixv_t *allocate_view_with_data(size_t nentry, arena_t *arena) {
+    matrixv_t tmp = {0};
+    tmp.data = allocate_scalars(nentry, arena);
+    if (!tmp.data) {
+        return NULL;
+    }
+
+    const size_t offset = awrite((char *)&tmp, sizeof(matrixv_t), _Alignof(matrixv_t), arena);
+    if (offset == SIZE_MAX) {
+        return NULL;
+    }
+
+    return (matrixv_t *)(arena->start + offset);
+}
+
+/*
 * Scalar-scalar addition
 */
-static result_t *ss_add(result_t *left, result_t *right, arena_t *arena) {
+static result_t *ss_add(const result_t *left, const result_t *right, arena_t *arena) {
     if (!left || !right) {
         return NULL;
     }
@@ -160,20 +211,48 @@ static result_t *ss_add(result_t *left, result_t *right, arena_t *arena) {
     scalar r_val = *(scalar *)right->obj;
 
     tmp->type = SCALAR_RES;
-    tmp->obj = allocate_scalar(l_val + r_val, arena);
+
+    /* scalars are allocated in the arena */
+    tmp->obj = copy_scalar(l_val + r_val, arena);
 
     if (!tmp->obj) {
         return NULL;
     }
     
-    return allocate_result(tmp, arena);
+    return copy_result(tmp, arena);
+}
+
+
+/*
+* Matrix-matrix addition
+*/
+static matrixv_t *mm_add_helper(const matrixv_t *left, const matrixv_t *right, arena_t *arena) {
+    matrixv_t tmp_C;
+    matrixv_t *C = &tmp_C;
+
+    C
+
+
+static result_t *mm_add(const result_t *left, const result_t *right, arena_t *arena) {
+    if (!left || !right) {
+        return NULL;
+    }
+
+    result_t tmp_result;
+    result_t *tmp = &tmp_result;
+    
+    tmp->type = MATRIX_RES;
+    tmp->obj = 
+
+    
+
 }
 
 
 /*
 * Dispatches the operation `op` to the linalg library with operands `left` and  `right`.
 * `left` and `right` MUST point to data structures used by the linalg library (`scalar`
-* and `matrixv_t`). The perform_* functions do not 
+* and `matrixv_t`). 
 *
 * It returns a pointer to a result_t struct containing the result of the operation upon
 * success and NULL otherwise.
@@ -186,7 +265,7 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
 
         case ADD:
             if (left->type == SCALAR_RES && right->type == SCALAR_RES) {
-                out = ss_add(left, right, arena); /* will add more */
+                out = ss_add(left, right, arena); 
             }
             assert(left->type == MATRIX_RES && right->type == MATRIX_RES);
             out = mm_add(left, right, arena);
