@@ -3,7 +3,7 @@
 /*
 * Matrix addition
 */
-int matrix_add(matrixv_t *C, matrixv_t *A, matrixv_t *B) {
+int matrix_add(matrixv_t *C, const matrixv_t *A, const matrixv_t *B) {
     if (!C || !A || !B || A->nrow != B->nrow || A->ncol != B->ncol 
         || C->nrow != A->nrow || C->ncol != A->ncol) {
         return -1;
@@ -54,7 +54,7 @@ int matrix_add(matrixv_t *C, matrixv_t *A, matrixv_t *B) {
 /*
 * Matrix subtraction.
 */
-int matrix_sub(matrixv_t *C, matrixv_t *A, matrixv_t *B) {
+int matrix_sub(matrixv_t *C, const matrixv_t *A, const matrixv_t *B) {
     if (!C || !A || !B || A->nrow != B->nrow || A->ncol != B->ncol
         || C->nrow != A->nrow || C->ncol != A->ncol) {
         return -1;
@@ -77,7 +77,7 @@ int matrix_sub(matrixv_t *C, matrixv_t *A, matrixv_t *B) {
 /*
 * Matrix multiplication (in the order AB)
 */
-int matrix_mul(matrixv_t *C, matrixv_t *A, matrixv_t *B) {
+int matrix_mul(matrixv_t *C, const matrixv_t *A, const matrixv_t *B) {
     if (!C || !A || !B || A->ncol != B->nrow || C->nrow != A->nrow
         || C->ncol != B->ncol) {
         return -1;

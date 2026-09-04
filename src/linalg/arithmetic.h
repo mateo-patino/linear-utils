@@ -11,9 +11,9 @@
 * and -1 upon failure.
 */
 
-int matrix_add(matrixv_t *C, matrixv_t *A, matrixv_t *B);
-int matrix_sub(matrixv_t *C, matrixv_t *A, matrixv_t *B);
-int matrix_mul(matrixv_t *C, matrixv_t *A, matrixv_t *B);
+int matrix_add(matrixv_t *C, const matrixv_t *A, const matrixv_t *B);
+int matrix_sub(matrixv_t *C, const matrixv_t *A, const matrixv_t *B);
+int matrix_mul(matrixv_t *C, const matrixv_t *A, const matrixv_t *B);
 
 
 
