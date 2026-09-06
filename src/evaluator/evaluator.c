@@ -116,23 +116,22 @@ static result_t *copy_result(const result_t *tmp, arena_t *arena) {
 static result_t *token_to_result(const token_t *token, arena_t *arena) {
     assert(is_operand_token(token) == true);
 
-    result_t result;
-    result_t *tmp = &result;
+    result_t tmp;
     
     if (token->type == SCALAR) {
-        tmp->type = SCALAR_RES;
-        tmp->obj = to_linalg_scalar(*(scalar_t *)token->obj, arena);
+        tmp.type = SCALAR_RES;
+        tmp.obj = to_linalg_scalar(*(scalar_t *)token->obj, arena);
     }
     else if (token->type == MATRIX) {
-        tmp->type = MATRIX_RES;
-        tmp->obj = create_matrix_view((matrix_t *)token->obj, arena);
+        tmp.type = MATRIX_RES;
+        tmp.obj = create_matrix_view((matrix_t *)token->obj, arena);
     }
 
-    if (!tmp->obj) {
+    if (!tmp.obj) {
         RETURN_NULL_AND_STATUS(EVAL_TOKEN_CONVERSION_FAILED);
     } 
 
-    return copy_result(tmp, arena);
+    return copy_result(&tmp, arena);
 }
 
 
@@ -491,7 +490,8 @@ result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
 
     /* If token is an operand, return it as a result_t */
     if (is_operand_token(token)) {
-        /* token_to_result sets status to EVAL_TOKEN_CONVERSION_FAILED upon failure */
+        /* token_to_result sets status to EVAL_TOKEN_CONVERSION_FAILED upon conversion failure
+        * but not malloc failure */
         result_t *out = token_to_result(token, arena);
         if (!out && !has_error_status) {
             RETURN_NULL_AND_STATUS(EVAL_MEMORY_FAILURE);
