@@ -94,8 +94,8 @@ static result_t *copy_result(const result_t *tmp, arena_t *arena) {
     if (!tmp || !arena) {
         return NULL;
     }
-    const size_t offset = awrite((char *)tmp, sizeof(result_t), _Alignof(result_t), arena);
 
+    const size_t offset = awrite((char *)tmp, sizeof(result_t), _Alignof(result_t), arena);
     if (offset == SIZE_MAX) {
         return NULL;
     }
@@ -143,8 +143,8 @@ static scalar *copy_scalar(scalar val, arena_t *arena) {
     if (!arena) {
         return NULL;
     }
-    const size_t offset = awrite((char *)&val, sizeof(scalar), _Alignof(scalar), arena);
 
+    const size_t offset = awrite((char *)&val, sizeof(scalar), _Alignof(scalar), arena);
     if (offset == SIZE_MAX) {
         return NULL;
     }
@@ -200,17 +200,13 @@ static scalar *allocate_scalars(size_t nentry, arena_t *arena) {
 */
 static matrixv_t *allocate_view_with_data(size_t nentry, arena_t *arena) {
     matrixv_t tmp = {0};
+
     tmp.data = allocate_scalars(nentry, arena);
     if (!tmp.data) {
         return NULL;
     }
-
-    const size_t offset = awrite((char *)&tmp, sizeof(matrixv_t), _Alignof(matrixv_t), arena);
-    if (offset == SIZE_MAX) {
-        return NULL;
-    }
-
-    return (matrixv_t *)(arena->start + offset);
+    
+    return copy_view(&tmp, arena);
 }
 
 
@@ -229,8 +225,7 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
         return NULL;
     }
 
-    matrixv_t tmp_view = {0};
-    matrixv_t *tmp = &tmp_view;
+    matrixv_t tmp = {0};
     size_t nrow = 0, ncol = 0;
 
     switch (op) {
@@ -241,15 +236,14 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
             nrow = left->nrow; 
             ncol = left->ncol;
 
-            tmp->nrow = nrow;
-            tmp->ncol = ncol;
+            tmp.nrow = nrow;
+            tmp.ncol = ncol;
 
-            /* VERIFY: can the row and column strides be initialized to 1 naively/always? */
-            tmp->column_stride = 1;
-            tmp->row_stride = 1;
+            tmp.column_stride = 1;
+            tmp.row_stride = 1;
 
-            tmp->data = allocate_scalars(nrow * ncol, arena);
-            if (!tmp->data) {
+            tmp.data = allocate_scalars(nrow * ncol, arena);
+            if (!tmp.data) {
                 return NULL;
             }
             break;
@@ -264,7 +258,7 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
     }
 
     /* Copy the temporary view struct to the arena */
-    return copy_view(tmp, arena);
+    return copy_view(&tmp, arena);
 }
 
 
@@ -277,7 +271,7 @@ static result_t *ss_add(const result_t *left, const result_t *right, arena_t *ar
     if (!left || !right) {
         return NULL;
     }
-    result_t tmp;
+    result_t tmp = {0};
 
     scalar l_val = *(scalar *)left->obj;
     scalar r_val = *(scalar *)right->obj;
@@ -298,7 +292,7 @@ static result_t *mm_add(const result_t *left, const result_t *right, arena_t *ar
     if (!left || !right || !left->obj || !right->obj) {
         return NULL;
     }
-    result_t tmp;
+    result_t tmp = {0};
 
     /* Compute output matrix */
     matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
@@ -323,7 +317,7 @@ static result_t *ss_sub(const result_t *left, const result_t *right, arena_t *ar
     if (!left || !right || !left->obj || !right->obj) {
         return NULL;
     }
-    result_t tmp;
+    result_t tmp = {0};
 
     scalar l_val = *(scalar *)left->obj;
     scalar r_val = *(scalar *)right->obj;
@@ -344,7 +338,7 @@ static result_t *mm_sub(const result_t *left, const result_t *right, arena_t *ar
     if (!left || !right || !left->obj || !right->obj) {
         return NULL;
     }
-    result_t tmp;
+    result_t tmp = {0};
 
     matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
     matrixv_t *C = initialize_output_view(SUB, A, B, arena);
@@ -464,8 +458,8 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     }
 
     /* 
-    * The result_t pointer returned by evaluate_subtree lives in the heap,
-    * so copy to another address and return it.
+    * The result_t pointer returned by evaluate_subtree lives in the arena,
+    * so copy to another address and return the copy.
     *
     * TODO: consider translating the result_t object retured by evaluate_subtree
     * to anothet struct that is agnostic of the linalg module.
@@ -547,6 +541,5 @@ result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
     */
     return perform_operation(op, left, right, arena);
 }
-
 
 
