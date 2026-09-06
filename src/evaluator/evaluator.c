@@ -51,7 +51,7 @@ static void set_status_errmsg(eval_status st) {
         case EVAL_OK:
             set_error("AST evaluation successful");
             return;
-        case EVAL_INVALID_AST:
+        case EVAL_NULL_VALUE:
             set_error("Invalid AST (either NULL or root is NULL)");
             return;
         case EVAL_MEMORY_FAILURE:
@@ -368,7 +368,13 @@ static result_t *mm_sub(const result_t *left, const result_t *right, arena_t *ar
 * success and NULL otherwise.
 */
 static result_t *perform_operation(operator_type op, result_t *left, result_t *right, arena_t *arena) {
-    assert(left != NULL && right != NULL);
+    /*
+    * Reject NULL right for unary operators and NULL left or right for 
+    * binary operators.
+    */
+    if ((is_unary_operator_enum(op) && !right) || (!left || !right)) {
+        RETURN_NULL_AND_STATUS(EVAL_NULL_VALUE);
+    }
 
     result_t *out;
     eval_status st = EVAL_OK;
@@ -421,7 +427,7 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
 
         case NUM_OP:
         default:
-            RETURN_NULL_AND_STATUS(EVAL_INVALID_AST);
+            RETURN_NULL_AND_STATUS(EVAL_NULL_VALUE);
     }
 
     if (!out) {
@@ -434,7 +440,7 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
 
 result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     if (!ast || !ast->root) {
-        RETURN_NULL_AND_CSTATUS(EVAL_INVALID_AST, status);
+        RETURN_NULL_AND_CSTATUS(EVAL_NULL_VALUE, status);
     }
 
     /* Set internal status to OK before starting */
@@ -448,13 +454,17 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
 
     result_t *tmp = evaluate_subtree(ast->root, arena);  
     eval_status st = get_status();
-    if (st != EVAL_OK) {
+
+    /* Both tmp and st should indicate an error simultaneously so the || is just a precaution */
+    if (st != EVAL_OK || !tmp) {
+        assert(st != EVAL_OK && tmp == NULL);         
         set_status_errmsg(st);
         free_arena(arena);
         RETURN_NULL_AND_CSTATUS(st, status);
     }
 
-    /* The result_t pointer returned by evaluate_subtree lives in the heap,
+    /* 
+    * The result_t pointer returned by evaluate_subtree lives in the heap,
     * so copy to another address and return it.
     *
     * TODO: consider translating the result_t object retured by evaluate_subtree
@@ -479,19 +489,28 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
 * This helper does not free the memory arena and does not write errors
 * to the global error buffer (this is done by evaluate_ast). It only
 * sets the internal status.
+*
+* Do not call this function on NULL nodes. This is done so that if a NULL node
+* is passed, we raise and error and can detect it and debug it properly.
 */
 result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
     if (!node) {
-        /* CHECK: i dont think we need this/might mistakenly report a failure */
-        RETURN_NULL_AND_STATUS(EVAL_INVALID_AST);
+        /*
+        * Do not call this function on correct (intended) NULL nodes, otherwise
+        * an error will be set.
+        */
+        RETURN_NULL_AND_STATUS(EVAL_NULL_VALUE);
     }
+
     const token_t *token = node->token;
     assert(token != NULL);
 
     /* If token is an operand, return it as a result_t */
     if (is_operand_token(token)) {
-        /* token_to_result sets status to EVAL_TOKEN_CONVERSION_FAILED upon conversion failure
-        * but not malloc failure */
+        /*
+        * token_to_result sets status to EVAL_TOKEN_CONVERSION_FAILED upon conversion failure
+        * but not malloc failure.
+        */
         result_t *out = token_to_result(token, arena);
         if (!out && !has_error_status) {
             RETURN_NULL_AND_STATUS(EVAL_MEMORY_FAILURE);
@@ -522,11 +541,12 @@ result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
     assert(token->obj != NULL);
     operator_type op = *(operator_type *)token->obj;
 
-    result_t *out = perform_operation(op, left, right, arena);
-    if (!out) {
-        /* perform_operation sets an internal status, so no need to set it here */
-        return NULL;
-    }
-    return out;
+    /*
+    * perform_operation ensures `left` and/or `right` are not NULL
+    * and returns NULL if so or if another error happens. 
+    */
+    return perform_operation(op, left, right, arena);
 }
+
+
 
