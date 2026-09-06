@@ -109,6 +109,8 @@ int matrix_mul(matrixv_t *restrict C, const matrixv_t *restrict A, const matrixv
     /* All matrix entries MUST unique */
     scalar *restrict C_data = C->data;
     const scalar *restrict A_data = A->data, *restrict B_data = B->data;
+
+    /* A->ncol == B->nrow, this is the matching dimension between A and B */
     size_t shared_dimension = A->ncol; 
 
     /* Contiguous in memory (non-strided) view */
@@ -122,11 +124,14 @@ int matrix_mul(matrixv_t *restrict C, const matrixv_t *restrict A, const matrixv
             C->data[i] = 0;
         }
 
-        /* A->ncol == B->nrow, this is the matching dimension between A and B */
+        scalar Aik;
         for (size_t i = 0; i < nrow; i++) {
-            for (size_t j = 0; j < ncol; j++) {
-                for (size_t k = 0; k < shared_dimension; k++) {
-                    C_data[i * C_rs + j] += A_data[i * A_rs + k] * B_data[k * B_rs + j];
+            for (size_t k = 0; k < shared_dimension; k++) {
+                Aik = A_data[i * A_rs + k]; 
+
+                #pragma omp simd
+                for (size_t j = 0; j < ncol; j++) {
+                    C_data[i * C_rs + j] += Aik * B_data[k * B_rs + j];
                 }
             }
         }
@@ -141,11 +146,14 @@ int matrix_mul(matrixv_t *restrict C, const matrixv_t *restrict A, const matrixv
         }
     }
 
-    /* NEEDSWORK: can be optimized by reordering loop */
+    scalar Aik; 
     for (size_t i = 0; i < nrow; i++) {
-        for (size_t j = 0; j < ncol; j++) {
-            for (size_t k = 0; k < shared_dimension; k++) {
-                C_data[i * C_rs + j * C_cs] += A_data[i * A_rs + k * A_cs] * B_data[k * B_rs + j * B_cs];
+        for (size_t k = 0; k < shared_dimension; k++) {
+            Aik = A_data[i * A_rs + k * A_cs]; 
+
+            #pragma omp simd
+            for (size_t j = 0; j < ncol; j++) {
+                C_data[i * C_rs + j * C_cs] += Aik * B_data[k * B_rs + j * B_cs];
             }
         }
     }
