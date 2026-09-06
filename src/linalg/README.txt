@@ -14,6 +14,7 @@ KEY DESIGN CHARACTERISTICS:
   provided by the caller. The library does not allocate or free any memory. 
 
 - The library uses 2-strided views to read and write matrix data, defined via `matrixv_t`
-  in `view.h`. Currently we'll only implement naive operations without any striding 
-  supported, but eventually we'll move on past the naive approaches, as some algorithms
-  work on submatrix views rather than .
+  in `view.h`.
+
+- The arithmetic.c functions allow pointer aliasing (i.e. usage like A = A + A) is allowed.
+  `restrict` is not used in the declarations of these arithmetic functions.
