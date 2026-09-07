@@ -219,8 +219,8 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
             tmp.nrow = nrow;
             tmp.ncol = ncol;
 
-            tmp.column_stride = 1;
             tmp.row_stride = 1;
+            tmp.column_stride = 1;
 
             tmp.data = allocate_scalars(nrow * ncol, arena);
             if (!tmp.data) {
@@ -228,13 +228,37 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
             }
             break;
 
+        /* Matrix-matrix multiplication */
         case MUL:
-            /* TODO */
+            assert(left->ncol == right->nrow);
+        
+            nrow = left->nrow;
+            ncol = right->ncol;
+
+            tmp.nrow = nrow;
+            tmp.ncol = ncol;
+
+            tmp.row_stride = 1;
+            tmp.column_stride = 1;
+
+            tmp.data = allocate_scalars(nrow * ncol, arena);
+            if (!tmp.data) {
+                return NULL;
+            }
             break;
 
+        /*
+        * The operators here either do not require an output matrix view (e.g. DIV, DET) or
+        * their output view can be initialized in another way, such as initializing an empty view
+        * with the dimensions of the input matrix view (e.g. INV, RREF). Hence, we skip initializing
+        * tmp here and return NULL;
+        */
+        case DIV:
+        case DET:
+        case RREF:
+        case INV:
         default:
-            /* TODO */
-            break;
+            return NULL;
     }
 
     /* Copy the temporary view struct to the arena */
