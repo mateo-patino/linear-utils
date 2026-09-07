@@ -12,12 +12,14 @@ This is a highly modular project: user input moves through a lexer, parser, abst
 
 ## Highlights
 
-- Scalar expressions with standard arithmetic precedence and associativity
-- Inline matrix literals such as `2x2 1 2 3 4`
-- Matrix-aware parsing and semantic validation
-- Parenthesized expressions and deeply nested unary operations
-- Operator aliases for readable command-line expressions
-- AST-based architecture designed for future evaluation features
+Some features and components that have been implemented so far:
+
+- Scalar math with standard arithmetic precedence and associativity
+- Inline matrix literal parsing. Strings such as `2x2 1 2 3 4` are parsed to a 2x2 matrix with those entries.
+- Abstract syntax tree (AST) construction
+- Semantic (mathematical) validation of the AST
+- Custom linear algebra kernels from scratch
+- Evaluation/glue layer that connects the linear algebra kernels to the rest of the program.
 - Unit tests for lexer, parser, and semantic validation
 - Valgrind-based memory-check workflow for end-to-end CLI inputs
 
@@ -60,40 +62,12 @@ For example, this is a 2-by-3 matrix:
 | Inverse (WIP) | `inv`, `inverse` |
 | Grouping  | `( ... )` |
 
-`ADD`, `SUB`, and `MUL` are overloaded by the semantic layer: depending on their operands, they may represent scalar arithmetic, matrix arithmetic, or scalar-matrix multiplication. Division is scalar-only.
+`ADD`, `SUB`, and `MUL` are overloaded by the semantic layer: depending on their operands, they may represent scalar arithmetic, matrix arithmetic, or scalar-matrix multiplication. Division is obviously scalar-only.
 
-## Architecture
-
-```text
-Command-line expression
-        |
-        v
-      Lexer
-        |
-        v
-   Token array
-        |
-        v
-      Parser
-        |
-        v
- Abstract syntax tree
-        |
-        v
- Semantic validation
-        |
-        v
-    Evaluator
-        |
-        v
- Linear algebra kernels
-```
-
-The linear algebra layer is deliberately separate from the CLI and higher-level language code. It uses strided matrix views and avoids owning application-level memory, making it suitable for reuse and future optimization.
 
 ## Development status
 
-If you know C and some linear algebra, please feel free to make a push request and advance this project! 
+If you know C and some linear algebra, please feel free to make a push request! A ton of work remains to be done. 
 
 ### Completed or substantially implemented
 
@@ -151,10 +125,10 @@ The memory-check script reads expressions from files in `tests/memory/`.
 
 Contributions and pull requests are welcome, especially in these areas:
 
-- Evaluator implementation and result formatting
 - Linear algebra algorithms: determinant, inverse, and RREF
-- Semantic analysis for dimensions propagated through nested expressions
-- Parser and lexer edge-case coverage
+- Semantic analysis for dimensions propagated through nested expressions (search for NEEDSWORK tags)
+- Parser and lexer edge-case coverage (I've extensively tested these but more tests are welcome)
+- A pretty printing module for displaying matrices to the terminal. This is the last module of the main program, which I have yet to start working on.
 - Cross-platform testing and memory-safety improvements
 - Documentation, examples, and CLI usability
 
@@ -170,6 +144,3 @@ If your change affects allocation, ownership, or error paths, please also run:
 make memcheck
 ```
 
-## Project goals
-
-The goal is not merely to produce matrix results—it is to build a clear, testable C implementation of a small expression language for linear algebra. `lin` is meant to be a practical calculator and a systems-programming project exploring parsing, AST construction, semantic analysis, memory ownership, and numerical computation.
