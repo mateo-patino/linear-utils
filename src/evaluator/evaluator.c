@@ -472,6 +472,22 @@ static result_t *ss_div(const result_t *left, const result_t *right, arena_t *ar
 }
 
 
+static eval_status op_to_error_enum(operator_type op) {
+    switch (op) {
+        case ADD:
+            return EVAL_ADD_FAILED;
+        case SUB:
+            return EVAL_SUB_FAILED;
+        case MUL:
+            return EVAL_MUL_FAILED;
+        case DIV:
+            return EVAL_DIV_FAILED;
+        default:
+            return EVAL_FAILED;
+    }
+}
+
+
 
 /*
 * Dispatches the operation `op` to the linalg library with operands `left` and  `right`.
@@ -490,46 +506,47 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
         RETURN_NULL_AND_STATUS(EVAL_NULL_VALUE);
     }
 
-    result_t *out;
-    eval_status st = EVAL_OK;
+    result_t *out = NULL;
 
     switch (op) {
 
         case ADD:
             if (left->type == SCALAR_RES && right->type == SCALAR_RES) {
                 out = ss_add(left, right, arena); 
+                break;
             }
+
             assert(left->type == MATRIX_RES && right->type == MATRIX_RES);
             out = mm_add(left, right, arena);
-
-            if (!out) { st = EVAL_ADD_FAILED; }
             break;
 
         case SUB:
             if (left->type == SCALAR_RES && right->type == SCALAR_RES) {
                 out = ss_sub(left, right, arena);
+                break;
             }
+
             assert(left->type == MATRIX_RES && right->type == MATRIX_RES);
             out = mm_sub(left, right, arena);
-
-            if (!out) { st = EVAL_SUB_FAILED; }
             break;
 
         case MUL:
             if (left->type == SCALAR_RES && right->type == SCALAR_RES) {
                 out = ss_mul(left, right, arena);
+                break;
             }
             /* We allow both scalar-matrix multiplication in either order: 10 * A or A * 10. */
             else if (left->type == SCALAR_RES && right->type == MATRIX_RES) {
                 out = sm_mul(left, right, arena);
+                break;
             }
             else if (left->type == MATRIX_RES && right->type == SCALAR_RES) {
                 out = sm_mul(right, left, arena);
+                break;
             }
+
             assert(left->type == MATRIX_RES && right->type == MATRIX_RES);
             out = mm_mul(left, right, arena);
-
-            if (!out) { st = EVAL_MUL_FAILED; }
             break;
         
         case DIV:
@@ -538,17 +555,17 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
             break;
 
         case DET:
-            assert(left == NULL && right != NULL);
+            assert(left == NULL && right != NULL && right->type == MATRIX_RES);
             /* TODO */
             break;
 
         case RREF:
-            assert(left == NULL && right != NULL);
+            assert(left == NULL && right != NULL && right->type == MATRIX_RES);
             /* TODO */
             break;
 
         case INV:
-            assert(left == NULL && right != NULL);
+            assert(left == NULL && right != NULL && right->type == MATRIX_RES);
             /* TODO */
             break;
 
@@ -558,7 +575,7 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
     }
 
     if (!out) {
-        RETURN_NULL_AND_STATUS(st);
+        RETURN_NULL_AND_STATUS(op_to_error_enum(op));
     }
 
     return out;
