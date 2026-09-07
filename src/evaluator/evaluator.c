@@ -444,6 +444,31 @@ static result_t *mm_mul(const result_t *left, const result_t *right, arena_t *ar
 }
 
 
+/************************************
+* DIVISION
+************************************/
+
+/* Scalar-scalar division */
+static result_t *ss_div(const result_t *left, const result_t *right, arena_t *arena) {
+    if (!left || !right) {
+        return NULL;
+    }
+    result_t tmp = {0};
+
+    scalar l_val = *(scalar *)left->obj, r_val = *(scalar *)right->obj;
+    
+    tmp.type = SCALAR_RES;
+    tmp.obj = copy_scalar(l_val / r_val, arena);
+
+    if (!tmp.obj) {
+        return NULL;
+    }
+
+    return copy_result(&tmp, arena);
+}
+
+
+
 /*
 * Dispatches the operation `op` to the linalg library with operands `left` and  `right`.
 * `left` and `right` MUST point to data structures used by the linalg library (`scalar`
@@ -505,22 +530,22 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
         
         case DIV:
             assert(left->type == SCALAR_RES && right->type == SCALAR_RES);
-            out = perform_div(left, right, arena);
+            out = ss_div(left, right, arena);
             break;
 
         case DET:
             assert(left == NULL && right != NULL);
-            out = perform_det(right, arena);
+            /* TODO */
             break;
 
         case RREF:
             assert(left == NULL && right != NULL);
-            out = perform_rref(right, arena);
+            /* TODO */
             break;
 
         case INV:
             assert(left == NULL && right != NULL);
-            out = perform_inv(right, arena);
+            /* TODO */
             break;
 
         case NUM_OP:
