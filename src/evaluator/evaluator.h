@@ -69,6 +69,12 @@ typedef enum {
 
 
 /*
+* Frees `ptr->obj` and `ptr` itself.
+*/
+void free_result(result_t *res);
+
+
+/*
 * Evaluates `ast` that is guaranteed to be semantically valid.
 *
 * Returns a pointer to a result_t struct allocated on the heap. The `obj` 

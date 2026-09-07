@@ -674,6 +674,25 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
 }
 
 
+void free_result(result_t *res) {
+    if (!res) {
+        return;
+    }
+
+    if (res->type == MATRIX_RES) {
+        matrixv_t *view = (matrixv_t *)res->obj;
+        if (view) {
+            free(view->data);
+        }
+        free(view);
+    }
+    else if (res->type == SCALAR_RES) {
+        free((scalar *)res->obj);
+    }
+
+    free(res);
+}
+
 result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     if (!ast || !ast->root) {
         RETURN_NULL_AND_CSTATUS(EVAL_NULL_VALUE, status);
