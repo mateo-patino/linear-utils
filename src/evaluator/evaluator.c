@@ -191,26 +191,6 @@ static scalar *allocate_scalars(size_t nentry, arena_t *arena) {
 
 
 /*
-* Allocates a matrix view to the arena AND allocates the corresponding 
-* memory for `nentry` data values.
-*
-* It returns a pointer to the matrix view upon success and NULL upon failure.
-* All values in the arena will be initialized to zero/default except the `data`
-* pointer which will point to an address containing `nentry` scalar values.
-*/
-static matrixv_t *allocate_view_with_data(size_t nentry, arena_t *arena) {
-    matrixv_t tmp = {0};
-
-    tmp.data = allocate_scalars(nentry, arena);
-    if (!tmp.data) {
-        return NULL;
-    }
-    
-    return copy_view(&tmp, arena);
-}
-
-
-/*
 * Allocates and sets up the output view struct for operation an `op`
 * with matrix operands. 
 *
