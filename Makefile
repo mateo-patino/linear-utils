@@ -8,7 +8,7 @@ else
 	CSTD := c2x
 endif
 
-CFLAGS = -std=$(CSTD) -Wall -Wextra -Werror -pedantic-errors -g
+CFLAGS = -std=$(CSTD) -Wall -Wextra -Werror -pedantic-errors -fopenmp -g
 CPPFLAGS = -Isrc
 LDLIBS = -lm
 
