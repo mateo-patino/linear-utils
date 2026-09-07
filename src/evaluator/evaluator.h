@@ -51,11 +51,13 @@ typedef struct {
 */
 typedef enum {
     EVAL_OK,
-    EVAL_INVALID_AST,
+    EVAL_NULL_VALUE,
     EVAL_MEMORY_FAILURE,
 
+    /* Used when a specific operation failed */
     EVAL_ADD_FAILED,
     EVAL_SUB_FAILED,
+    EVAL_MUL_FAILED,
 
     /* When conversion form scalar_t/matrix_t to linalg's scalar/matrixv_t fails */
     EVAL_TOKEN_CONVERSION_FAILED,

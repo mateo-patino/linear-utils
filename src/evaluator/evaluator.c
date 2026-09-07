@@ -262,6 +262,31 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
 }
 
 
+/*
+* Allocates a matrix view with dimensions `nrow` and `ncol` 
+* in `arena`.
+*
+* The row and column strides are initialized to 1, and the view points
+* to a block with `nrow` * `ncol` scalar entries.
+*/
+static matrixv_t *init_view_with_dim(size_t nrow, size_t ncol, arena_t *arena) {
+    matrixv_t tmp = {0};
+
+    tmp.nrow = nrow;
+    tmp.ncol = ncol;
+
+    tmp.row_stride = 1;
+    tmp.column_stride = 1;
+
+    tmp.data = allocate_scalars(nrow * ncol, arena);
+    if (!tmp.data) {
+        return NULL;
+    }
+
+    return copy_view(&tmp, arena);
+}
+ 
+
 /************************************
 * ADDITION
 ************************************/
@@ -295,7 +320,7 @@ static result_t *mm_add(const result_t *left, const result_t *right, arena_t *ar
     result_t tmp = {0};
 
     /* Compute output matrix */
-    matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
+    const matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
     matrixv_t *C = initialize_output_view(ADD, A, B, arena);
     if (matrix_add(C, A, B) == -1) {
         return NULL;    
@@ -340,7 +365,7 @@ static result_t *mm_sub(const result_t *left, const result_t *right, arena_t *ar
     }
     result_t tmp = {0};
 
-    matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
+    const matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
     matrixv_t *C = initialize_output_view(SUB, A, B, arena);
     if (matrix_sub(C, A, B) == -1) {
         return NULL;
@@ -349,6 +374,72 @@ static result_t *mm_sub(const result_t *left, const result_t *right, arena_t *ar
     tmp.type = MATRIX_RES;
     tmp.obj = C; 
 
+    return copy_result(&tmp, arena);
+}
+
+
+/************************************
+* MULTIPLICATION
+************************************/
+
+/* Scalar-scalar multiplication */
+static result_t *ss_mul(const result_t *left, const result_t *right, arena_t *arena) { 
+    if (!left || !right) {
+        return NULL;
+    }
+    result_t tmp = {0};
+
+    scalar l_val = *(scalar *)left->obj;
+    scalar r_val = *(scalar *)right->obj;
+
+    tmp.type = SCALAR_RES;
+    tmp.obj = copy_scalar(l_val * r_val, arena);
+
+    if (!tmp.obj) {
+        return NULL;
+    }
+    
+    return copy_result(&tmp, arena);
+}
+
+
+/* Scalar-matrix multiplication. It is assumed that `left` is the scalar and `right` is the matrix */
+static result_t *sm_mul(const result_t *left, const result_t *right, arena_t *arena) {   
+    if (!left || !right) {
+        return NULL;
+    }
+    result_t tmp = {0};
+
+    const scalar s = *(scalar *)left->obj;
+    const matrixv_t *A = (matrixv_t *)right->obj;
+    matrixv_t *C = init_view_with_dim(A->nrow, A->ncol, arena);
+    if (scalar_matrix_mul(C, s, A) == -1) {
+        return NULL;
+    } 
+    
+    tmp.type = MATRIX_RES;
+    tmp.obj = C;
+
+    return copy_result(&tmp, arena);
+}
+
+
+/* Matrix-matrix multiplication */
+static result_t *mm_mul(const result_t *left, const result_t *right, arena_t *arena) {
+    if (!left || !right) {
+        return NULL;
+    }
+    result_t tmp = {0};
+
+    const matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)right->obj;
+    matrixv_t *C = initialize_output_view(MUL, A, B, arena);
+    if (matrix_mul(C, A, B) == -1) {
+        return NULL;
+    }
+    
+    tmp.type = MATRIX_RES;
+    tmp.obj = C;
+    
     return copy_result(&tmp, arena);
 }
 
@@ -396,7 +487,20 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
             break;
 
         case MUL:
-            out = perform_mul(left, right, arena);
+            if (left->type == SCALAR_RES && right->type == SCALAR_RES) {
+                out = ss_mul(left, right, arena);
+            }
+            /* We allow both scalar-matrix multiplication in either order: 10 * A or A * 10. */
+            else if (left->type == SCALAR_RES && right->type == MATRIX_RES) {
+                out = sm_mul(left, right, arena);
+            }
+            else if (left->type == MATRIX_RES && right->type == SCALAR_RES) {
+                out = sm_mul(right, left, arena);
+            }
+            assert(left->type == MATRIX_RES && right->type == MATRIX_RES);
+            out = mm_mul(left, right, arena);
+
+            if (!out) { st = EVAL_MUL_FAILED; }
             break;
         
         case DIV:
@@ -441,7 +545,7 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     clear_status();
     
     /* 
-    * This memory arena will hold all of the matrix view objects
+    * This memory arena will hold all of the matrix view and result objects
     * used during evaluation.
     */
     arena_t *arena = create_arena(MiB(12));
@@ -541,5 +645,4 @@ result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
     */
     return perform_operation(op, left, right, arena);
 }
-
 
