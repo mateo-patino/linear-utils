@@ -87,6 +87,98 @@ static void set_status_errmsg(eval_status st) {
 
 
 /*
+* Performs a deep copy of the `tmp` matrix view struct (i.e. `tmp->data` is
+* copied) on the heap.
+*
+* It returns a pointer to a new matrixv_t on the heap if successful, and 
+* NULL upon failure.
+*/
+static matrixv_t *deep_copy_matrixv(const matrixv_t *tmp) {
+    if (!tmp) {
+        return NULL;
+    }
+
+    matrixv_t *new_view = malloc(sizeof(matrixv_t));
+    if (!new_view) {
+        return NULL;
+    }
+
+    new_view->nrow = tmp->nrow;
+    new_view->ncol = tmp->ncol;
+
+    /*
+    * We're making a "logical" deep copy of the matrix view in the sense that
+    * we ignore all "surrounding" scalars in memory (i.e. those skipped by the
+    * strides), so we set the new strides to default values. This means we'll 
+    * only copy the scalars that are accessible through `tmp` and its stride
+    * settings.
+    */
+    new_view->row_stride = new_view->ncol;
+    new_view->column_stride = 1;
+
+    size_t nentry = new_view->nrow * new_view->ncol;
+    scalar *new_data = malloc(nentry * sizeof(scalar));
+    if (!new_data) {
+        free(new_view);
+        return NULL;
+    }
+
+    /* This handles both strided and non-strided (contiguous in memory) `tmp` views */
+    size_t k = 0;
+    for (size_t i = 0; i < tmp->nrow; i++) {
+        for (size_t j = 0; j < tmp->ncol; j++) {
+            new_data[k++] = tmp->data[i * tmp->row_stride + j * tmp->column_stride];
+        }
+    }
+
+    new_view->data = new_data;
+
+    return new_view;
+}
+
+
+/*
+* Performs a deep copy of the `tmp` result_t struct (i.e. `tmp->obj` is
+* copied) on the heap.
+*
+* A pointer to a new result_t struct is returned. The pointer must be freed
+* by the caller.
+*/
+static result_t *deep_copy_result(const result_t *tmp) {
+    if (!tmp) {
+        return NULL;
+    }
+
+    result_t *new_res = malloc(sizeof(result_t));
+    if (!new_res) {
+        return NULL;
+    }
+
+    void *new_obj;
+
+    if (tmp->type == SCALAR_RES) {
+        new_obj = malloc(sizeof(scalar));
+        if (!new_obj) {
+            free(new_res);
+            return NULL;
+        }
+        *(scalar *)new_obj = *(scalar *)tmp->obj;
+    }
+    else if (tmp->type == MATRIX_RES) {
+        new_obj = deep_copy_matrixv((const matrixv_t *)tmp->obj);
+        if (!new_obj) {
+            free(new_res);
+            return NULL;
+        }
+    }
+
+    new_res->type = tmp->type;
+    new_res->obj = new_obj;
+
+    return new_res;
+}
+
+/*
 * Copy (allocate) a result_t at `tmp` to an arena.
 * A pointer to the new struct in the arena is returned.
 */
@@ -608,19 +700,18 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     }
 
     /* 
-    * The result_t pointer returned by evaluate_subtree lives in the arena,
-    * so copy to another address and return the copy.
+    * The result_t pointer returned by evaluate_subtree and its obj pointer point to the arena,
+    * so do a deep copy of `tmp` to another address and return the copy.
     *
     * TODO: consider translating the result_t object retured by evaluate_subtree
     * to anothet struct that is agnostic of the linalg module.
     */
-    result_t *final = malloc(sizeof(result_t));
+    result_t *final = deep_copy_result(tmp);
     if (!final) {
         set_status_errmsg(EVAL_MEMORY_FAILURE);
         free_arena(arena);
         RETURN_NULL_AND_CSTATUS(EVAL_MEMORY_FAILURE, status);
     }
-    memcpy(final, tmp, sizeof(result_t));
 
     free_arena(arena);
     return final;
