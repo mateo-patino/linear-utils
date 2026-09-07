@@ -162,3 +162,44 @@ int matrix_mul(matrixv_t *restrict C, const matrixv_t *restrict A, const matrixv
 }
 
 
+/*
+* Scalar-matrix multiplication
+*/
+int scalar_matrix_mul(matrixv_t *C, scalar s, const matrixv_t *A) {
+    if (!C || !A || C->ncol != A->ncol || C->nrow != A->nrow) {
+        return -1;
+    }
+
+    scalar *C_data = C->data;
+    const scalar *A_data = A->data;
+
+    /* Contiguous path */
+    if ((C->row_stride == C->ncol && C->column_stride == 1) &&
+        (A->row_stride == A->ncol && A->column_stride == 1)) {
+
+        size_t nentry = C->nrow * C->ncol;
+
+        #pragma omp simd
+        for (size_t i = 0; i < nentry; i++) {
+            C_data[i] = s * A_data[i];
+        }
+
+        return 0;
+    }
+    
+    /* General strided path */
+    size_t C_rs = C->row_stride, C_cs = C->column_stride;
+    size_t A_rs = A->row_stride, A_cs = A->column_stride;
+    size_t nrow = C->nrow, ncol = C->ncol;
+
+    for (size_t i = 0; i < nrow; i++) {
+        #pragma omp simd
+        for (size_t j = 0; j < ncol; j++) {
+            C_data[i * C_rs + j * C_cs] = s * A_data[i * A_rs + j * A_cs];
+        }
+    }
+
+    return 0;
+}
+
+
