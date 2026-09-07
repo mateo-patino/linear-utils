@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
     eval_status evaluate_status;
     result_t *out = evaluate_ast(ast, &evaluate_status);
 
-    free(out);
+    free_result(out);
     inspect_tokens(tokens, token_count);
     fully_free_tokens(tokens, token_count);
     fully_free_ast(ast);
