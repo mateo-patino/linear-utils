@@ -8,7 +8,7 @@ all in a command-line format.
 This is a highly modular project: user input moves through a lexer, parser, abstract syntax tree, semantic checker, evaluator, and a small linear algebra library.
 
 > [!WARNING]
-> **This project is actively under development.** The language, CLI output, APIs, and supported evaluation features may change as the evaluator and linear algebra layers mature.
+> **This project is actively under development.** The language, CLI output, APIs, and supported evaluation features may change as the evaluator and linear algebra layers mature. Sometimes I commit function declarations that haven't been implemented yet, so it's possible that the compiler yells and doesn't let you build an executable. 
 
 ## Highlights
 
