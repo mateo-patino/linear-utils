@@ -2,7 +2,7 @@
 
 > A (work-in-progress!) command-line calculator for linear algebra, written in C.
 
-`lin` is implements an expressive linear algebra language that accepts scalar values, inline matrix literals, arithmetic, matrix operations, and unary operations such as determinant, inverse, and row reduction,
+`lin` implements an expressive linear algebra language that accepts scalar values, inline matrix literals, arithmetic, matrix operations, and unary operations such as determinant, inverse, and row reduction,
 all in a command-line format.
 
 This is a highly modular project: user input moves through a lexer, parser, abstract syntax tree, semantic checker, evaluator, and a small linear algebra library.
