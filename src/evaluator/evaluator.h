@@ -58,6 +58,7 @@ typedef enum {
     EVAL_ADD_FAILED,
     EVAL_SUB_FAILED,
     EVAL_MUL_FAILED,
+    EVAL_DIV_FAILED,
 
     /* When conversion form scalar_t/matrix_t to linalg's scalar/matrixv_t fails */
     EVAL_TOKEN_CONVERSION_FAILED,
