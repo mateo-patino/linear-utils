@@ -99,11 +99,11 @@ int main(int argc, char **argv) {
         goto FREE_AST_AND_TOKENS_FAIL;
     }
 
-    /* Evaluate the AST */
+    /* Evaluate the AST. `out` must be freed. */
     eval_status evaluate_status;
     result_t *out = evaluate_ast(ast, &evaluate_status);
 
-    (void)out;
+    free(out);
     inspect_tokens(tokens, token_count);
     fully_free_tokens(tokens, token_count);
     fully_free_ast(ast);
