@@ -649,7 +649,7 @@ result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
     * As is convention in this codebase, if a node is a unary operator,
     * we set its left child to NULL and recurse on the right only.
     */
-    if (is_unary_operator(token)) {
+    if (is_unary_operator_token(token)) {
         assert(node->left == NULL && node->right != NULL);
         left = NULL;
         right = evaluate_subtree(node->right, arena);
