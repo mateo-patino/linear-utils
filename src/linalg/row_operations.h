@@ -12,7 +12,7 @@
 int swap_rows(size_t i, size_t j, matrixv_t *A);
 
 /* Set row_i <- row_i + factor * row_j */
-int add_rows(size_t i, scalar factor, size_t j, matrixv_t *A);
+int add_row_multiple(size_t i, scalar factor, size_t j, matrixv_t *A);
 
 #endif
 

@@ -29,3 +29,32 @@ int swap_rows(size_t i, size_t j, matrixv_t *A) {
 
     return 0;     
 }
+
+
+/* Does row_i <- row_i + factor * row_j */
+int add_row_multiple(size_t i, scalar factor, size_t j, matrixv_t *A) {
+    if (!A || i >= A->nrow || j >= A->nrow) {
+        return -1;
+    }
+
+    size_t ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
+    scalar *data = A->data;
+
+    /* Tiny optimization. row_i <- row_i + factor * row_i equals row_i <- (1 + factor) * row_i */
+    if (i == j) {
+        factor++;
+        #pragma omp simd
+        for (size_t c = 0; c < ncol; c++) {
+            data[i * rs + c * cs] *= factor;
+        }
+        return 0;
+    }
+
+    #pragma omp simd
+    for (size_t c = 0; c < ncol; c++) {
+        data[i * rs + c * cs] += factor * data[j * rs + c * cs];
+    }
+
+    return 0;
+}
+
