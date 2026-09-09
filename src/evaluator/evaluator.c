@@ -154,7 +154,7 @@ static result_t *deep_copy_result(const result_t *tmp) {
         return NULL;
     }
 
-    void *new_obj;
+    void *new_obj = NULL;
 
     if (tmp->type == SCALAR_RES) {
         new_obj = malloc(sizeof(scalar));
