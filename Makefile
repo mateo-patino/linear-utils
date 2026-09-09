@@ -8,7 +8,13 @@ else
 	CSTD := c2x
 endif
 
-CFLAGS = -std=$(CSTD) -Wall -Wextra -Werror -pedantic-errors -fopenmp -g
+
+# This is a hack to detect whether the compiler accepts the -fopenmp flag for OpenMP directives
+# Apple's Clang does not while GCC/LLVM do, so this avoids any Apple headaches and simply
+# compiles without OpenMP directives. Note the last echo won't run if the compiler command fails.
+OPEN_MP := $(shell echo "int main(void) { return 0; }" | $(CC) -fopenmp -x c - -o /dev/null 2>/dev/null/ && echo "-fopenmp" )
+
+CFLAGS = -std=$(CSTD) -Wall -Wextra -Werror -pedantic-errors $(OPEN_MP) -g
 CPPFLAGS = -Isrc
 LDLIBS = -lm
 
