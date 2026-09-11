@@ -62,6 +62,23 @@ int add_row_multiple(size_t i, scalar factor, size_t j, matrixv_t *A) {
 }
 
 
+int scale_row(size_t i, scalar factor, matrixv_t *A) {
+    if (!A || i >= A->nrow) {
+        return -1;
+    }
+
+    size_t ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
+    scalar *data = A->data;
+
+    #pragma omp simd
+    for (size_t j = 0; j < ncol; j++) {
+        data[i * rs + j * cs] *= factor;
+    }
+
+    return 0;
+}
+
+
 int to_upper_triangular(matrixv_t *A, int *swap_count) {
     if (!A || A->nrow != A->ncol) {
         return -1;
@@ -120,5 +137,51 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
     }
     
     return 0;
+}
+
+
+int to_rref(matrixv_t *A) {
+    if (!A) {
+        return -1;
+    }
+    
+    size_t nrow = A->nrow, ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
+    scalar *data = A->data;
+
+    for (size_t j = 0; j < ncol; j++) {
+
+        /* Find largest pivot entry and swap its row with pivot row */
+        size_t prow = j;
+        for (size_t i = j + 1; i < nrow; i++) {
+            if (fabs(data[i * rs + j * cs]) > fabs(data[prow * rs + j * cs])) {
+                prow = i;
+            }
+        }
+
+        if (prow != j) {
+            swap_rows(prow, j, A);
+        }
+
+        scalar pivot_entry = data[j * rs + j * cs];
+        
+        /* Column has no pivots, so move on to the next column */
+        if (pivot_entry == 0) {
+            continue;
+        }
+        
+        /* Normalize pivot entry and zero out the rest in that column */
+        
+
+        scalar factor;
+        for (size_t i = j + 1; i < nrow; i++) {
+            factor = data[i * rs + j * cs] / pivot_entry;
+            add_row_multiple(i, -1 * factor, j, A);
+        }
+        
+
+    
+
+    }
+    
 }
 

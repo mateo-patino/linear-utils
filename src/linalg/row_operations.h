@@ -14,6 +14,11 @@ int swap_rows(size_t i, size_t j, matrixv_t *A);
 /* Set row_i <- row_i + factor * row_j */
 int add_row_multiple(size_t i, scalar factor, size_t j, matrixv_t *A);
 
+/*
+* Multiplies row `i` by `factor`
+*/
+int scale_row(size_t i, scalar factor, matrixv_t *A);
+
 
 /*
 * Row-reduces `A` to an upper triangular form. 
@@ -28,6 +33,15 @@ int add_row_multiple(size_t i, scalar factor, size_t j, matrixv_t *A);
 * This functions uses Gaussian elimination with partial pivoting. 
 */
 int to_upper_triangular(matrixv_t *A, int *swap_count);
+
+
+/*
+* Row-reduces `A` to RREF.
+*
+* Row-reduction is done in-place, so `A` will be directly modified. 
+* 0 is returned upon success and -1 upon failure.
+*/
+int to_rref(matrixv_t *A);
 
 
 #endif
