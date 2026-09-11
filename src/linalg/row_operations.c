@@ -147,41 +147,43 @@ int to_rref(matrixv_t *A) {
     
     size_t nrow = A->nrow, ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
     scalar *data = A->data;
+    size_t pivot_row = 0, largest_entry_row = 0;
+    scalar pivot_entry = 0;
 
-    for (size_t j = 0; j < ncol; j++) {
+    for (size_t j = 0; j < ncol && pivot_row < nrow; j++) {
 
-        /* Find largest pivot entry and swap its row with pivot row */
-        size_t prow = j;
-        for (size_t i = j + 1; i < nrow; i++) {
-            if (fabs(data[i * rs + j * cs]) > fabs(data[prow * rs + j * cs])) {
-                prow = i;
+        /* Find largest entry in the column and swap its row with the pivot row */
+        largest_entry_row = pivot_row;
+        for (size_t i = pivot_row + 1; i < nrow; i++) {
+            if (fabs(data[i * rs + j * cs]) > fabs(data[largest_entry_row * rs + j * cs])) {
+                largest_entry_row = i;
             }
         }
 
-        if (prow != j) {
-            swap_rows(prow, j, A);
+        if (largest_entry_row != pivot_row) {
+            swap_rows(pivot_row, largest_entry_row, A);
         }
 
-        scalar pivot_entry = data[j * rs + j * cs];
+        pivot_entry = data[pivot_row * rs + j * cs];
         
-        /* Column has no pivots, so move on to the next column */
+        /* Column has no pivots, so move on to the next column without updating pivot_row */
         if (pivot_entry == 0) {
             continue;
         }
         
-        /* Normalize pivot entry and zero out the rest in that column */
-        
-
-        scalar factor;
-        for (size_t i = j + 1; i < nrow; i++) {
-            factor = data[i * rs + j * cs] / pivot_entry;
-            add_row_multiple(i, -1 * factor, j, A);
+        /* Normalize pivot row and zero out the non-pivot entries in this column */
+        scale_row(pivot_row, 1 / pivot_entry, A); 
+        for (size_t i = 0; i < nrow; i++) {
+            if (i == pivot_row) {
+                continue;
+            }
+            add_row_multiple(i, -1 * data[i * rs + j * cs], pivot_row, A);
         }
-        
 
-    
-
+        /* Move on to the next row */
+        pivot_row++;
     }
-    
+
+    return 0;
 }
 
