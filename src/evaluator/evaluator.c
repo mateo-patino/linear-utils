@@ -14,11 +14,39 @@
 #include <stdio.h>
 
 
-/*
-* An internal interface for recording error codes.
-*/
+/* An internal interface for recording error codes. */
 static eval_status internal_eval_status = EVAL_OK;
 static bool has_error_status = false;
+
+/* Static helpers */
+static void set_status(eval_status code);
+static eval_status get_status(void);
+static void clear_status(void);
+static void set_status_errmsg(eval_status st);
+static matrixv_t *deep_copy_matrixv(const matrixv_t *tmp);
+static scalar *allocate_scalars(size_t nentry, arena_t *arena);
+static matrixv_t *deep_copy_matrixv_arena(const matrixv_t *tmp, arena_t *arena);
+static result_t *deep_copy_result(const result_t *tmp);
+static result_t *copy_result(const result_t *tmp, arena_t *arena);
+static result_t *token_to_result(const token_t *token, arena_t *arena);
+static scalar *copy_scalar(scalar val, arena_t *arena);
+static matrixv_t *copy_view(const matrixv_t *tmp, arena_t *arena);
+static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left, const matrixv_t *right, arena_t *arena);
+static matrixv_t *init_view_with_dim(size_t nrow, size_t ncol, arena_t *arena);
+
+/* These helpers directly communicate with the linalg/ module and are called from the dispatcher perform_operation */
+static result_t *ss_add(const result_t *left, const result_t *right, arena_t *arena);
+static result_t *mm_add(const result_t *left, const result_t *right, arena_t *arena);
+static result_t *ss_sub(const result_t *left, const result_t *right, arena_t *arena);
+static result_t *mm_sub(const result_t *left, const result_t *right, arena_t *arena);
+static result_t *ss_mul(const result_t *left, const result_t *right, arena_t *arena);
+static result_t *sm_mul(const result_t *left, const result_t *right, arena_t *arena);
+static result_t *mm_mul(const result_t *left, const result_t *right, arena_t *arena);
+static result_t *ss_div(const result_t *left, const result_t *right, arena_t *arena);
+static result_t *m_det(const result_t *right, arena_t *arena);
+static result_t *m_rref(const result_t *right, arena_t *arena);
+static eval_status op_to_error_enum(operator_type op);
+static result_t *perform_operation(operator_type op, const result_t *left, const result_t *right, arena_t *arena);
 
 static void set_status(eval_status code) {
     /* If an error status (!= EVAL_OK) has been set, don't overwrite */
@@ -138,6 +166,45 @@ static matrixv_t *deep_copy_matrixv(const matrixv_t *tmp) {
 }
 
 
+
+
+static matrixv_t *deep_copy_matrixv_arena(const matrixv_t *tmp, arena_t *arena) {
+    if (!tmp || !arena) {
+        return NULL;
+    }
+
+    matrixv_t new_view = {0};
+
+    new_view.nrow = tmp->nrow;
+    new_view.ncol = tmp->ncol;
+
+    scalar *new_data = allocate_scalars(tmp->nrow * tmp->ncol, arena);
+    if (!new_data) {
+        return NULL;
+    }
+
+    /* 
+    * Do a "logical" deep copy of `tmp` in the sense that only the entries
+    * available through the stride settings in `tmp` will be copied. Entries
+    * around/skipped by the strides won't be copied because `tmp` doesn't tell
+    * us how many of them exist nor how large the `data` block is in memory.
+    */
+    new_view.row_stride = 1;
+    new_view.column_stride = 1;
+
+    size_t k = 0;
+    for (size_t i = 0; i < tmp->nrow; i++) {
+        for (size_t j = 0; j < tmp->ncol; j++) {
+            new_data[k++] = tmp->data[i * tmp->row_stride + j * tmp->column_stride];
+        }
+    }
+
+    new_view.data = new_data;
+
+    return copy_view(&new_view, arena);
+}
+
+
 /*
 * Performs a deep copy of the `tmp` result_t struct (i.e. `tmp->obj` is
 * copied) on the heap.
@@ -178,6 +245,27 @@ static result_t *deep_copy_result(const result_t *tmp) {
 
     return new_res;
 }
+
+
+/*
+* Allocates memory for `nentry` scalar values in `arena`.
+* All values are initialized to 0.
+*
+* A pointer to the first scalar value is returned upon succes.
+*/
+static scalar *allocate_scalars(size_t nentry, arena_t *arena) {
+    const size_t offset = awrite(NULL, nentry * sizeof(scalar), _Alignof(scalar), arena);
+    
+    if (offset == SIZE_MAX) {
+        return NULL;
+    }
+
+    scalar *out = (scalar *)(arena->start + offset);
+    memset(out, 0, nentry);
+
+    return out;
+}
+
 
 /*
 * Copy (allocate) a result_t at `tmp` to an arena.
@@ -264,26 +352,6 @@ static matrixv_t *copy_view(const matrixv_t *tmp, arena_t *arena) {
 
 
 /*
-* Allocates memory for `nentry` scalar values in `arena`.
-* All values are initialized to 0.
-*
-* A pointer to the first scalar value is returned upon succes.
-*/
-static scalar *allocate_scalars(size_t nentry, arena_t *arena) {
-    const size_t offset = awrite(NULL, nentry * sizeof(scalar), _Alignof(scalar), arena);
-    
-    if (offset == SIZE_MAX) {
-        return NULL;
-    }
-
-    scalar *out = (scalar *)(arena->start + offset);
-    memset(out, 0, nentry);
-
-    return out;
-}
-
-
-/*
 * Allocates and sets up the output view struct for operation an `op`
 * with matrix operands. 
 *
@@ -364,7 +432,7 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
 * in `arena`.
 *
 * The row and column strides are initialized to 1, and the view points
-* to a block with `nrow` * `ncol` scalar entries.
+* to a block in the arena with `nrow` * `ncol` scalar entries.
 */
 static matrixv_t *init_view_with_dim(size_t nrow, size_t ncol, arena_t *arena) {
     matrixv_t tmp = {0};
@@ -578,6 +646,9 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
     /* 
     * Do a deep copy of the matrix because matrix_det does in-place operations on 
     * on the matrix it gets. Note this copy is in the heap and must be freed.
+    *
+    * NEEDSWORK: i shouldn't have used malloc/free here. This should simply re-use the 
+    * memory arena for the temporary view, no additional malloc'ing here is neeed.
     */
     matrixv_t *tmp_view = deep_copy_matrixv((matrixv_t *)right->obj);
     if (!tmp_view) {
@@ -611,6 +682,35 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
 }
 
 
+/************************************
+* RREF
+************************************/
+static result_t *m_rref(const result_t *right, arena_t *arena) {
+    if (!right) { 
+        return NULL;
+    }
+    
+    result_t tmp = {0};
+
+    /* Do a deep copy of the input matrix to avoid modifying the original one */
+    matrixv_t *tmp_view = deep_copy_matrixv_arena((matrixv_t *)right->obj, arena);
+    if (!tmp_view) {
+        return NULL;
+    }
+
+    /* tmp_view will be modified in-place */
+    if (matrix_rref(tmp_view) == -1) {
+        return NULL;
+    }
+
+    /* Note the result will point to tmp_view, so tmp_view must be in the arena */
+    tmp.type = MATRIX_RES;
+    tmp.obj = tmp_view;
+
+    return copy_result(&tmp, arena);
+}
+
+
 static eval_status op_to_error_enum(operator_type op) {
     switch (op) {
         case ADD:
@@ -623,6 +723,8 @@ static eval_status op_to_error_enum(operator_type op) {
             return EVAL_DIV_FAILED;
         case DET:
             return EVAL_DET_FAILED;
+        case RREF:
+            return EVAL_RREF_FAILED;
         default:
             return EVAL_FAILED;
     }
@@ -702,7 +804,7 @@ static result_t *perform_operation(operator_type op, const result_t *left, const
 
         case RREF:
             assert(left == NULL && right != NULL && right->type == MATRIX_RES);
-            /* TODO */
+            out = m_rref(right, arena);
             break;
 
         case INV:
@@ -850,4 +952,3 @@ result_t *evaluate_subtree(const node_t *node, arena_t *arena) {
     */
     return perform_operation(op, left, right, arena);
 }
-
