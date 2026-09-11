@@ -32,3 +32,12 @@ int matrix_det(scalar *out, matrixv_t *A) {
 
     return 0;
 }
+
+
+
+int matrix_rref(matrixv_t *A) {
+    if (!A) {
+        return -1;
+    }
+    return to_rref(A);
+}

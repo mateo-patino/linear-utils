@@ -26,6 +26,15 @@
 * a deep copy of `A` if you wish to preserve the original matrix.
 */
 int matrix_det(scalar *out, matrixv_t *A);
+
+
+/*
+* Compute the Reduced Row-Echelon Form (RREF) of `A`.
+* 
+* The RREF of `A` is performed in-place, so `A` will be modified by this
+* function.  0 is returned upon success and -1 upon failure.
+*/
+int matrix_rref(matrixv_t *A);
  
 
 #endif
