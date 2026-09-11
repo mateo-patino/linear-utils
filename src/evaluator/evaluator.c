@@ -2,6 +2,7 @@
 #include "linalg/view.h"
 #include "linalg/arithmetic.h"
 #include "linalg/scalar.h"
+#include "linalg/unary_operations.h"
 #include "types/token.h"
 #include "arena.h"
 #include "errorprinter.h"
@@ -564,6 +565,52 @@ static result_t *ss_div(const result_t *left, const result_t *right, arena_t *ar
 }
 
 
+/************************************
+* DETERMINANT
+************************************/
+static result_t *m_det(const result_t *right, arena_t *arena) {
+    if (!right) {
+        return NULL;
+    }
+
+    result_t tmp = {0};
+
+    /* 
+    * Do a deep copy of the matrix because matrix_det does in-place operations on 
+    * on the matrix it gets. Note this copy is in the heap and must be freed.
+    */
+    matrixv_t *tmp_view = deep_copy_matrixv((matrixv_t *)right->obj);
+    if (!tmp_view) {
+        return NULL;
+    }    
+
+    scalar det;
+    int ok;
+    if ((ok = matrix_det(&det, tmp_view)) == -1) {
+        free(tmp_view);
+        return NULL;
+    }
+    /* 1 is returned if the matrix is singular. NEEDSWORK: printing a warning to the screen 
+    * is acceptable for now, but for the long term we need a better way to report math errors */
+    else if (ok == 1) {
+        fprintf(stderr, "Warning: singular matrix, could not compute determinant.\n");
+        free(tmp_view);
+        return NULL;
+    }
+
+    tmp.type = SCALAR_RES;
+    tmp.obj = copy_scalar(det, arena);
+
+    if (!tmp.obj) {
+        free(tmp_view);
+        return NULL;
+    }
+
+    free(tmp_view);
+    return copy_result(&tmp, arena);
+}
+
+
 static eval_status op_to_error_enum(operator_type op) {
     switch (op) {
         case ADD:
@@ -574,6 +621,8 @@ static eval_status op_to_error_enum(operator_type op) {
             return EVAL_MUL_FAILED;
         case DIV:
             return EVAL_DIV_FAILED;
+        case DET:
+            return EVAL_DET_FAILED;
         default:
             return EVAL_FAILED;
     }
@@ -589,7 +638,7 @@ static eval_status op_to_error_enum(operator_type op) {
 * It returns a pointer to a result_t struct containing the result of the operation upon
 * success and NULL otherwise.
 */
-static result_t *perform_operation(operator_type op, result_t *left, result_t *right, arena_t *arena) {
+static result_t *perform_operation(operator_type op, const result_t *left, const result_t *right, arena_t *arena) {
     /*
     * Reject NULL right for unary operators and NULL left or right for 
     * binary operators.
@@ -648,7 +697,7 @@ static result_t *perform_operation(operator_type op, result_t *left, result_t *r
 
         case DET:
             assert(left == NULL && right != NULL && right->type == MATRIX_RES);
-            /* TODO */
+            out = m_det(right, arena);
             break;
 
         case RREF:
