@@ -62,7 +62,7 @@ int add_row_multiple(size_t i, scalar factor, size_t j, matrixv_t *A) {
 }
 
 
-int to_upper_triangular(matrixv_t *A) {
+int to_upper_triangular(matrixv_t *A, int *swap_count) {
     if (!A || A->nrow != A->ncol) {
         return -1;
     }
@@ -71,6 +71,7 @@ int to_upper_triangular(matrixv_t *A) {
     scalar *data = A->data;
 
     /* Iterate through the columns in the matrix */
+    int swaps = 0;
     for (size_t j = 0; j < ncol; j++) {
         
         /* 
@@ -88,6 +89,7 @@ int to_upper_triangular(matrixv_t *A) {
         /* Move the pivot row to the j-th row index. The pivot row is then at index j */
         if (prow != j) {
             swap_rows(prow, j, A);
+            swaps++;
         }
         scalar pivot_entry = data[j * rs + j * cs];
 
@@ -111,6 +113,10 @@ int to_upper_triangular(matrixv_t *A) {
         }
         
         /* Repeat with the next column, starting one row below this time (note the i = j + 1) */ 
+    }
+
+    if (swap_count) { 
+        *swap_count = swaps;
     }
     
     return 0;
