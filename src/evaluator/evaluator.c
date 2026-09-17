@@ -482,7 +482,7 @@ static matrixv_t *init_identity_matrix(size_t n, arena_t *arena) {
         return NULL;
     }
 
-    /* We assume row stride of n and column stride of 1 down below */
+    /* Populate diagonal with 1. We assume row stride of n and column stride of 1 down below */
     for (size_t i = 0; i < n; i++) {
         tmp.data[i * n + i] = 1;
     }
@@ -704,7 +704,7 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
     /* 1 is returned if the matrix is singular. NEEDSWORK: printing a warning to the screen 
     * is acceptable for now, but for the long term we need a better way to report math errors */
     else if (ok == 1) {
-        fprintf(stderr, "Warning: singular matrix, could not compute determinant.\n");
+        fprintf(stderr, "MATH: singular matrix, could not compute determinant.\n");
         free(tmp_view);
         return NULL;
     }
@@ -776,8 +776,24 @@ static result_t *m_inv(const result_t *right, arena_t *arena) {
 
     assert(tmp_view->ncol == tmp_view->nrow);
     matrixv_t *C = init_identity_matrix(tmp_view->ncol, arena);
+    if (!C) {
+        return NULL;
+    }
 
+    int ok;
+    if ((ok = matrix_inv(C, tmp_view)) == -1) {
+        return NULL;
+    }
+    else if (ok == 1) {
+        fprintf(stderr, "MATH: could not invert matrix. TODO: add why not\n");
+        return NULL;
+    }
+    
+    /* C will be modified in-place and should contain the inverse matrix */
+    tmp.type = MATRIX_RES;
+    tmp.obj = C;
 
+    return copy_result(&tmp, arena);
 }
 
 
