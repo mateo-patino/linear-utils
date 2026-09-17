@@ -33,6 +33,7 @@ static scalar *copy_scalar(scalar val, arena_t *arena);
 static matrixv_t *copy_view(const matrixv_t *tmp, arena_t *arena);
 static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left, const matrixv_t *right, arena_t *arena);
 static matrixv_t *init_view_with_dim(size_t nrow, size_t ncol, arena_t *arena);
+static matrixv_t *init_identity_matrix(size_t n, arena_t *arena);
 
 /* These helpers directly communicate with the linalg/ module and are called from the dispatch function perform_operation() */
 static result_t *ss_add(const result_t *left, const result_t *right, arena_t *arena);
@@ -373,6 +374,10 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
 
         case ADD:
         case SUB:
+            /*
+            * NEEDSWORK: this routine down here is exactly what init_view_with_dim does, so
+            * refactor this part to use that function.
+            */
             assert(left->ncol == right->ncol && left->nrow == right->nrow);
             nrow = left->nrow; 
             ncol = left->ncol;
@@ -413,6 +418,9 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
         * their output view can be initialized in another way, such as initializing an empty view
         * with the dimensions of the input matrix view (e.g. INV, RREF). Hence, we skip initializing
         * tmp here and return NULL;
+        *
+        * NEEDSWORK: in RREF and INV, you do perform some work to initialize output views, so 
+        * you should move that code here and simplify the code in the functions.
         */
         case DIV:
         case DET:
@@ -432,7 +440,7 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
 * in `arena`.
 *
 * The row and column strides are initialized to 1, and the view points
-* to a block in the arena with `nrow` * `ncol` scalar entries.
+* to a block in the arena with `nrow` * `ncol` scalar entries initialized to 0.
 */
 static matrixv_t *init_view_with_dim(size_t nrow, size_t ncol, arena_t *arena) {
     matrixv_t tmp = {0};
@@ -450,6 +458,38 @@ static matrixv_t *init_view_with_dim(size_t nrow, size_t ncol, arena_t *arena) {
 
     return copy_view(&tmp, arena);
 }
+
+
+/*
+* Allocates an nxn square matrix view containing the identity matrix
+* (1s along the diagonal with zeros everywhere else) on `arena`.
+*/
+static matrixv_t *init_identity_matrix(size_t n, arena_t *arena) {
+    if (n == 0 || !arena) {
+        return NULL;
+    }
+
+    matrixv_t tmp = {0};
+    
+    tmp.ncol = n;
+    tmp.nrow = n;
+
+    tmp.row_stride = 1;
+    tmp.column_stride = 1;
+
+    tmp.data = allocate_scalars(n * n, arena);
+    if (!tmp.data) {
+        return NULL;
+    }
+
+    /* We assume row stride of n and column stride of 1 down below */
+    for (size_t i = 0; i < n; i++) {
+        tmp.data[i * n + i] = 1;
+    }
+
+    return copy_view(&tmp, arena);
+}
+
  
 
 /************************************
@@ -711,6 +751,37 @@ static result_t *m_rref(const result_t *right, arena_t *arena) {
 }
 
 
+/************************************
+* INV
+************************************/
+static result_t *m_inv(const result_t *right, arena_t *arena) {
+    if (!right) {
+        return NULL;
+    }
+
+    result_t tmp = {0};
+
+    /*
+    * The current linear algebra method to compute inverses is to
+    * perform row reduction down to RREF on the input matrix and 
+    * apply each row operation to the identity matrix. Hence, we'll
+    * make a deep copy of the input matrix (to avoid modifying it during
+    * row operations) and another (empty) copy where the inverse matrix
+    * will be saved.
+    */
+    matrixv_t *tmp_view = deep_copy_matrixv_arena((matrixv_t *)right->obj, arena);
+    if (!tmp_view) {
+        return NULL;
+    }
+
+    assert(tmp_view->ncol == tmp_view->nrow);
+    matrixv_t *C = init_identity_matrix(tmp_view->ncol, arena);
+
+
+}
+
+
+
 static eval_status op_to_error_enum(operator_type op) {
     switch (op) {
         case ADD:
@@ -809,7 +880,7 @@ static result_t *perform_operation(operator_type op, const result_t *left, const
 
         case INV:
             assert(left == NULL && right != NULL && right->type == MATRIX_RES);
-            /* TODO */
+            out = m_inv(right, arena);
             break;
 
         case NUM_OP:
