@@ -44,6 +44,18 @@ int to_upper_triangular(matrixv_t *A, int *swap_count);
 int to_rref(matrixv_t *A);
 
 
+/*
+* Row-reduce `A` until it becomes the identity matrix while
+* repeating every row operation on matrix `C`. `C` will ultimately
+* contain the inverse matrix of `A`.
+*
+* It returns 0 upon success, -1 upon failure due to a bad input, and 1
+* if matrix `A` is singular and cannot be converted into the identity matrix
+* (i.e. `A` has no inverse).
+*/
+int inv_augmented_gauss_jordan(matrixv_t *restrict C, matrixv_t *restrict A);
+
+
 #endif
 
 

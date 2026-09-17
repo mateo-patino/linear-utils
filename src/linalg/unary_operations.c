@@ -41,3 +41,11 @@ int matrix_rref(matrixv_t *A) {
     }
     return to_rref(A);
 }
+
+
+int matrix_inv(matrixv_t *restrict C, matrixv_t *restrict A) {
+    if (!C || !A) {
+        return -1;
+    }
+    return inv_augmented_gauss_jordan(C, A); 
+}

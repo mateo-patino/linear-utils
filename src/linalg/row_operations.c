@@ -89,6 +89,8 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
 
     /* Iterate through the columns in the matrix */
     int swaps = 0;
+    scalar pivot_entry, factor;
+    size_t largest_entry_row;
     for (size_t j = 0; j < ncol; j++) {
         
         /* 
@@ -96,19 +98,19 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
         * making its row the pivot row. This helps us avoid multiplying by large
         * values which can amplify numerical errors.
         */
-        size_t prow = j;
+        largest_entry_row = j;
         for (size_t i = j + 1; i < nrow; i++) {
-            if (fabs(data[i * rs + j * cs]) > fabs(data[prow * rs + j * cs])) {
-                prow = i;
+            if (fabs(data[i * rs + j * cs]) > fabs(data[largest_entry_row * rs + j * cs])) {
+                largest_entry_row = i;
             }
         }
 
-        /* Move the pivot row to the j-th row index. The pivot row is then at index j */
-        if (prow != j) {
-            swap_rows(prow, j, A);
+        /* Move the largest entry's row to the j-th row index. The pivot row is then at index j */
+        if (largest_entry_row != j) {
+            swap_rows(largest_entry_row, j, A);
             swaps++;
         }
-        scalar pivot_entry = data[j * rs + j * cs];
+        pivot_entry = data[j * (rs + cs)];
 
         /* 
         * Check if singular matrix (i.e. all entries in the rows >= j are 0) 
@@ -123,7 +125,6 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
         * Cancel the entries below the pivot entry by adding a multiple of the pivot
         * row to the row of each entry.
         */
-        scalar factor;
         for (size_t i = j + 1; i < nrow; i++) {
             factor = data[i * rs + j * cs] / pivot_entry;
             add_row_multiple(i, -1 * factor, j, A);
@@ -182,6 +183,56 @@ int to_rref(matrixv_t *A) {
 
         /* Move on to the next row */
         pivot_row++;
+    }
+
+    return 0;
+}
+
+int inv_augmented_gauss_jordan(matrixv_t *restrict C, matrixv_t *restrict A) {
+    if (!C || !A || A->nrow != A->ncol || A->nrow != C->nrow || A->ncol != C->ncol) {
+        return -1;
+    }
+    
+    size_t nrow = A->nrow, ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
+    scalar *data = A->data;
+
+    size_t largest_entry_row;
+    scalar pivot_entry;
+    scalar factor;
+    for (size_t j = 0; j < ncol; j++) {
+
+        /* In the current column, find row of the largest entry and make it the pivot row */
+        largest_entry_row = j;
+        for (size_t i = j + 1; i < nrow; i++) {
+            if (fabs(data[i * rs + j * cs]) > fabs(data[largest_entry_row * rs + j * cs])) {
+                largest_entry_row = i;
+            }
+        }
+
+        /* Swap the row of the largest entry into the current pivot row. The pivot row is then at row j */
+        if (largest_entry_row != j) {
+            swap_rows(largest_entry_row, j, A);
+            swap_rows(largest_entry_row, j, C);
+        }
+        pivot_entry = data[j * (rs + cs)];
+
+        /* NEEDSWORK: again, decide if we should check for exact equality of zero. Same question for other row routines */
+        if (pivot_entry == 0) {
+            return 1;
+        }
+
+        /* Normalize pivot entry and zero out all other entries in this column */
+        scale_row(j, 1 / pivot_entry, A);
+        scale_row(j, 1 / pivot_entry, C);
+        for (size_t i = 0; i < nrow; i++) {
+            if (i == j) {
+                continue;
+            }
+            factor = -1 * data[i * rs + j * cs];
+            add_row_multiple(i, factor, j, A);
+            add_row_multiple(i, factor, j, C);
+        }
+
     }
 
     return 0;

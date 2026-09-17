@@ -35,6 +35,26 @@ int matrix_det(scalar *out, matrixv_t *A);
 * function.  0 is returned upon success and -1 upon failure.
 */
 int matrix_rref(matrixv_t *A);
- 
+
+
+/*
+* Compute the inverse matrix of `A`.
+*
+* `A` is a view of the input matrix to invert, and `C` must be
+* a view containing the identity matrix that matches the dimensions 
+* of `A`. 
+*
+* This function uses Gauss-Jordan elimination to row-reduce `A` 
+* and `C` in-place until `A` is in RREF, at which point `C` will
+* contain the inverse of `A`.
+*
+* 0 is returned upon success and -1 upon failure. 1 for math error???
+*
+* Note: This function reads from and writes to `C->data` and `A->data` directly.
+* The `data` arrays must not overlap each other in storage or we'll get 
+* undefined behavior.
+*/
+int matrix_inv(matrixv_t *restrict C, matrixv_t *restrict A);
+/* TODO: implement the row operation kernel for this bad boy above */ 
 
 #endif
