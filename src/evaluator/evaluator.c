@@ -34,7 +34,7 @@ static matrixv_t *copy_view(const matrixv_t *tmp, arena_t *arena);
 static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left, const matrixv_t *right, arena_t *arena);
 static matrixv_t *init_view_with_dim(size_t nrow, size_t ncol, arena_t *arena);
 
-/* These helpers directly communicate with the linalg/ module and are called from the dispatcher perform_operation */
+/* These helpers directly communicate with the linalg/ module and are called from the dispatch function perform_operation() */
 static result_t *ss_add(const result_t *left, const result_t *right, arena_t *arena);
 static result_t *mm_add(const result_t *left, const result_t *right, arena_t *arena);
 static result_t *ss_sub(const result_t *left, const result_t *right, arena_t *arena);
@@ -745,7 +745,7 @@ static result_t *perform_operation(operator_type op, const result_t *left, const
     * Reject NULL right for unary operators and NULL left or right for 
     * binary operators.
     */
-    if ((is_unary_operator_enum(op) && !right) || (!left || !right)) {
+    if ((is_unary_operator_enum(op) && !right) || (!left && !right)) {
         RETURN_NULL_AND_STATUS(EVAL_NULL_VALUE);
     }
 
