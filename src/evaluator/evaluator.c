@@ -785,7 +785,7 @@ static result_t *m_inv(const result_t *right, arena_t *arena) {
         return NULL;
     }
     else if (ok == 1) {
-        fprintf(stderr, "MATH: could not invert matrix. TODO: add why not\n");
+        fprintf(stderr, "MATH: singular matrix, could not compute its inverse.\n");
         return NULL;
     }
     
