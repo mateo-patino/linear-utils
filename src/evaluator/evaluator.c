@@ -141,6 +141,7 @@ static void set_status_errmsg(eval_status st) {
 
         case EVAL_FAILED:
             set_error("Could not perform evaluation.");
+            return;
 
         default:
             set_error("Unknown eval status code. Debug!");
