@@ -13,7 +13,7 @@ all in a command-line format.
 Some features and components that have been implemented so far:
 
 - Scalar math with standard arithmetic precedence and associativity
-- Inline matrix literal parsing. Strings such as `2x2 1 2 3 4` are parsed to a 2x2 matrix with those entries.
+- Inline matrix literal parsing. Strings such as `2x2 1 2 3 4` are parsed to a 2x2 matrix with those entries in a row-major layout.
 - Abstract syntax tree (AST) and recursive descent parser
 - Recursive semantic (mathematical) validation of the AST
 - Custom linear algebra kernels (elementary row operations, Gauss-Jordan elimination, etc.) from scratch
