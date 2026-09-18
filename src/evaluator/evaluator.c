@@ -46,7 +46,7 @@ static result_t *mm_mul(const result_t *left, const result_t *right, arena_t *ar
 static result_t *ss_div(const result_t *left, const result_t *right, arena_t *arena);
 static result_t *m_det(const result_t *right, arena_t *arena);
 static result_t *m_rref(const result_t *right, arena_t *arena);
-static eval_status op_to_error_enum(operator_type op);
+static eval_status op_to_error_enum(operator_type op, const result_t *leftt, const result_t *right);
 static result_t *perform_operation(operator_type op, const result_t *left, const result_t *right, arena_t *arena);
 
 static void set_status(eval_status code) {
@@ -86,6 +86,16 @@ static void set_status_errmsg(eval_status st) {
             return;
         case EVAL_MEMORY_FAILURE:
             set_error("Memory failure.");
+            return;
+        case EVAL_ADD_FAILED:
+            set_error("Addition failed.");
+            return;
+        case EVAL_SUB_FAILED:
+            set_error("Subtraction failed.");
+            return;
+
+        case EVAL_MUL_FAILED:
+            set_error("A failed.");
             return;
         case EVAL_TOKEN_CONVERSION_FAILED:
             set_error("'scalar_t' to 'scalar' or 'matrix_t' to 'matrixv_t' conversion failed.");
@@ -798,20 +808,36 @@ static result_t *m_inv(const result_t *right, arena_t *arena) {
 
 
 
-static eval_status op_to_error_enum(operator_type op) {
+static eval_status op_to_error_enum(operator_type op, const result_t *left, const result_t *right) {
     switch (op) {
+
         case ADD:
-            return EVAL_ADD_FAILED;
+            assert(!left && !right && left->type == right->type);
+            return left->type == SCALAR_RES ? EVAL_SS_ADD_FAILED : EVAL_MM_ADD_FAILED;
+
         case SUB:
-            return EVAL_SUB_FAILED;
+            assert(!left && !right && left->type == right->type);
+            return left->type == SCALAR_RES ? EVAL_SS_SUB_FAILED : EVAL_MM_SUB_FAILED;
+
         case MUL:
-            return EVAL_MUL_FAILED;
+            assert(!left && !right);
+            if (left->type != right->type) {
+                return EVAL_SM_MUL_FAILED;
+            }
+            else if (left->type == MATRIX_RES) {
+                return EVAL_MM_MUL_FAILED;
+            }
+            return EVAL_SS_MUL_FAILED;
+
         case DIV:
             return EVAL_DIV_FAILED;
+
         case DET:
             return EVAL_DET_FAILED;
+
         case RREF:
             return EVAL_RREF_FAILED;
+
         default:
             return EVAL_FAILED;
     }
@@ -828,11 +854,7 @@ static eval_status op_to_error_enum(operator_type op) {
 * success and NULL otherwise.
 */
 static result_t *perform_operation(operator_type op, const result_t *left, const result_t *right, arena_t *arena) {
-    /*
-    * Reject NULL right for unary operators and NULL left or right for 
-    * binary operators.
-    */
-    if ((is_unary_operator_enum(op) && !right) || (!left && !right)) {
+    if (!right || (!is_unary_operator_enum(op) && !left)) {
         RETURN_NULL_AND_STATUS(EVAL_NULL_VALUE);
     }
 
@@ -905,7 +927,7 @@ static result_t *perform_operation(operator_type op, const result_t *left, const
     }
 
     if (!out) {
-        RETURN_NULL_AND_STATUS(op_to_error_enum(op));
+        RETURN_NULL_AND_STATUS(op_to_error_enum(op, left, right));
     }
 
     return out;

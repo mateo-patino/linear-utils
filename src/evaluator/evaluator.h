@@ -55,9 +55,13 @@ typedef enum {
     EVAL_MEMORY_FAILURE,
 
     /* Used when a specific operation failed */
-    EVAL_ADD_FAILED,
-    EVAL_SUB_FAILED,
-    EVAL_MUL_FAILED,
+    EVAL_SS_ADD_FAILED,
+    EVAL_MM_ADD_FAILED,
+    EVAL_SS_SUB_FAILED,
+    EVAL_MM_SUB_FAILED,
+    EVAL_SS_MUL_FAILED,
+    EVAL_SM_MUL_FAILED,
+    EVAL_MM_MUL_FAILED,
     EVAL_DIV_FAILED,
     EVAL_DET_FAILED,
     EVAL_RREF_FAILED,
