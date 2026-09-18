@@ -78,43 +78,72 @@ static void clear_status(void) {
 */
 static void set_status_errmsg(eval_status st) {
     switch (st) {
+
         case EVAL_OK:
             set_error("AST evaluation successful");
             return;
+
         case EVAL_NULL_VALUE:
             set_error("Invalid AST (either NULL or root is NULL)");
             return;
+
         case EVAL_MEMORY_FAILURE:
             set_error("Memory failure.");
             return;
+
         case EVAL_SS_ADD_FAILED:
             set_error("Scalar addition failed.");
             return;
+
         case EVAL_MM_ADD_FAILED:
             set_error("Matrix addition failed.");
             return;
+
         case EVAL_SS_SUB_FAILED:
             set_error("Scalar subtraction failed.");
             return;
+
         case EVAL_MM_SUB_FAILED:
             set_error("Matrix subtraction failed.");
             return;
+
         case EVAL_SS_MUL_FAILED:
             set_error("Scalar-scalar multiplication failed.");
             return;
+
         case EVAL_SM_MUL_FAILED:
             set_error("Scalar-matrix multiplication failed.");
             return;
+
         case EVAL_MM_MUL_FAILED:
             set_error("Matrix multiplication failed.");
             return;
+
+        case EVAL_DIV_FAILED:
+            set_error("Scalar division failed.");
+            return;
+
+        case EVAL_DET_FAILED:
+            set_error("Failed to compute determinant.");
+            return;
+
+        case EVAL_RREF_FAILED:
+            set_error("Failed to compute reduced-row echelon form.");
+            return;
+
+        case EVAL_INV_FAILED:
+            set_error("Failed to compute inverse matrix.");
+            return;
+
         case EVAL_TOKEN_CONVERSION_FAILED:
             set_error("'scalar_t' to 'scalar' or 'matrix_t' to 'matrixv_t' conversion failed.");
             return;
+
         case EVAL_FAILED:
             set_error("Could not perform evaluation.");
+
         default:
-            set_error("Unknown eval status code ???");
+            set_error("Unknown eval status code. Debug!");
             return;
     }
 }
@@ -727,7 +756,7 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
     /* 1 is returned if the matrix is singular. NEEDSWORK: printing a warning to the screen 
     * is acceptable for now, but for the long term we need a better way to report math errors */
     else if (ok == 1) {
-        fprintf(stderr, "MATH: singular matrix, could not compute determinant.\n");
+        fprintf(stderr, "Linear algebra: singular matrix, could not compute determinant.\n");
         free(tmp_view);
         return NULL;
     }
@@ -808,7 +837,7 @@ static result_t *m_inv(const result_t *right, arena_t *arena) {
         return NULL;
     }
     else if (ok == 1) {
-        fprintf(stderr, "MATH: singular matrix, could not compute its inverse.\n");
+        fprintf(stderr, "Linear algebra: singular matrix, could not compute its inverse.\n");
         return NULL;
     }
     
