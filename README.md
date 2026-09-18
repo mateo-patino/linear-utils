@@ -2,13 +2,11 @@
 
 > A (work-in-progress!) command-line calculator for linear algebra, written in C.
 
-`lin` implements an expressive linear algebra language that accepts scalar values, inline matrix literals, arithmetic, matrix operations, and unary operations such as determinant, inverse, and row reduction,
+`lin`, short for `linear-utils`, implements an expressive linear algebra language that accepts scalar values, inline matrix literals, matrix algebra, and computations such as determinant, inverses, and row reduction,
 all in a command-line format.
 
-This is a highly modular project: user input moves through a lexer, parser, abstract syntax tree, semantic checker, evaluator, and a small linear algebra library.
-
 > [!WARNING]
-> **This project is actively under development.** The language, CLI output, APIs, and supported evaluation features may change as the evaluator and linear algebra layers mature. 
+> **This project is actively under development.** The APIs, linear algebra routines, and the overall architecture of the program may change as I work on it.
 
 ## Highlights
 
@@ -16,12 +14,13 @@ Some features and components that have been implemented so far:
 
 - Scalar math with standard arithmetic precedence and associativity
 - Inline matrix literal parsing. Strings such as `2x2 1 2 3 4` are parsed to a 2x2 matrix with those entries.
-- Abstract syntax tree (AST) construction
-- Semantic (mathematical) validation of the AST
-- Custom linear algebra kernels from scratch
-- Evaluation/glue layer that connects the linear algebra kernels to the rest of the program.
+- Abstract syntax tree (AST) and recursive descent parser
+- Recursive semantic (mathematical) validation of the AST
+- Custom linear algebra kernels (elementary row operations, Gauss-Jordan elimination, etc.) from scratch
+- Evaluation/glue layer that connects the linear algebra functions to the rest of the program.
+- Memory arena allocator
 - Unit tests for lexer, parser, and semantic validation
-- Valgrind-based memory-check workflow for end-to-end CLI inputs
+- Valgrind memory-sanity tests for end-to-end executions
 
 ## Example syntax
 
@@ -56,13 +55,13 @@ For example, this is a 2-by-3 matrix:
 | Addition | `add`, `plus`, `+` |
 | Subtraction | `sub`, `minus`, `-` |
 | Multiplication | `mul`, `times`, `*` |
-| Division (WIP) | `div`, `over`, `/` |
-| Determinant (WIP) | `det`, `determinant`, `detof` |
-| Row reduction (WIP) | `rref`, `reduced` |
-| Inverse (WIP) | `inv`, `inverse` |
+| Division | `div`, `over`, `/` |
+| Determinant | `det`, `determinant`, `detof` |
+| Row reduction | `rref`, `reduced` |
+| Inverse | `inv`, `inverse` |
 | Grouping  | `( ... )` |
 
-`ADD`, `SUB`, and `MUL` are overloaded by the semantic layer: depending on their operands, they may represent scalar arithmetic, matrix arithmetic, or scalar-matrix multiplication. Division is obviously scalar-only.
+`ADD`, `SUB`, and `MUL` are overloaded by the semantic layer: depending on their operands, they may represent scalar arithmetic, matrix arithmetic, or scalar-matrix multiplication. Division is scalar-only.
 
 
 ## Development status
@@ -76,20 +75,17 @@ If you know C and some linear algebra, please feel free to make a push request! 
 - [x] Operator aliases and precedence metadata
 - [x] AST construction with precedence, associativity, and parenthesis handling
 - [x] Semantic checks for operand types, matrix dimensions, finite values, and square-matrix requirements
+- [x] Evaluation layer for reading the AST and dispatching operations to the linear algebra library 
 - [x] Unit-test harness with isolated test execution
 - [x] Lexer, parser, and semantic test suites
 - [x] Memory-check script using Valgrind
-- [x] Initial linear algebra view and arithmetic interfaces
+- [x] Elementary row operations, Gauss-Jordan elimination, and convertion to upper-triangular
 
 ### In progress
 
-- [ ] Complete evaluator coverage for all operators
-- [ ] Present evaluated results cleanly in the CLI
-- [ ] Complete matrix addition, subtraction, multiplication, and scalar-matrix evaluation paths
-- [ ] Determinant, inverse, and RREF evaluation
-- [ ] Richer semantic propagation through nested matrix expressions
-- [ ] Improved diagnostics with source-oriented expression context
-- [ ] Broader test coverage for evaluator and linear algebra kernels
+- [ ] Pretty printing module capable of displaying evaluated results cleanly to the terminal
+- [ ] Linear algebra test suite, likely to be implemented in C++ using Eigen to check for numerical correctness
+- [ ] Evaluation layer test suite
 
 ## Building
 
@@ -125,11 +121,10 @@ The memory-check script reads expressions from files in `tests/memory/`.
 
 Contributions and pull requests are welcome, especially in these areas:
 
-- Linear algebra algorithms: determinant, inverse, and RREF
 - Semantic analysis for dimensions propagated through nested expressions (search for NEEDSWORK tags)
 - Parser and lexer edge-case coverage (I've extensively tested these but more tests are welcome)
-- A pretty printing module for displaying matrices to the terminal. This is the last module of the main program, which I have yet to start working on.
-- Cross-platform testing and memory-safety improvements
+- A pretty printing module for displaying matrices to the terminal. This is the last module of the main program, which I am about to start working on.
+- Cross-platform testing and memory-safety improvements (don't have GitHub actions yet)
 - Documentation, examples, and CLI usability
 
 Before opening a PR, please keep changes focused, add or update relevant tests, and run:
