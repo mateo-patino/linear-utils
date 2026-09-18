@@ -1,6 +1,6 @@
 # lin
 
-> A (work-in-progress!) command-line calculator for linear algebra, written in C.
+> A command-line calculator for linear algebra, written in C.
 
 `lin`, short for `linear-utils`, implements an expressive linear algebra language that accepts scalar values, inline matrix literals, matrix algebra, and computations such as determinant, inverses, and row reduction,
 all in a command-line format.
