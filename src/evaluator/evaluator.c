@@ -87,21 +87,34 @@ static void set_status_errmsg(eval_status st) {
         case EVAL_MEMORY_FAILURE:
             set_error("Memory failure.");
             return;
-        case EVAL_ADD_FAILED:
-            set_error("Addition failed.");
+        case EVAL_SS_ADD_FAILED:
+            set_error("Scalar addition failed.");
             return;
-        case EVAL_SUB_FAILED:
-            set_error("Subtraction failed.");
+        case EVAL_MM_ADD_FAILED:
+            set_error("Matrix addition failed.");
             return;
-
-        case EVAL_MUL_FAILED:
-            set_error("A failed.");
+        case EVAL_SS_SUB_FAILED:
+            set_error("Scalar subtraction failed.");
+            return;
+        case EVAL_MM_SUB_FAILED:
+            set_error("Matrix subtraction failed.");
+            return;
+        case EVAL_SS_MUL_FAILED:
+            set_error("Scalar-scalar multiplication failed.");
+            return;
+        case EVAL_SM_MUL_FAILED:
+            set_error("Scalar-matrix multiplication failed.");
+            return;
+        case EVAL_MM_MUL_FAILED:
+            set_error("Matrix multiplication failed.");
             return;
         case EVAL_TOKEN_CONVERSION_FAILED:
             set_error("'scalar_t' to 'scalar' or 'matrix_t' to 'matrixv_t' conversion failed.");
             return;
+        case EVAL_FAILED:
+            set_error("Could not perform evaluation.");
         default:
-            set_error("Unknown eval status code");
+            set_error("Unknown eval status code ???");
             return;
     }
 }
