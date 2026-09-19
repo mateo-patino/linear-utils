@@ -118,15 +118,17 @@ matrix_t *init_matrix_token_from_view(const matrixv_t *view) {
     * NOTE: this warning (and the other in token.c) will likely need to change if
     * you modify the scalar_t struct 
     */
-    if (sizeof(scalar_t) < sizeof(scalar))
+    if (sizeof(scalar_t) < sizeof(scalar)) {
         fprintf(stderr, "WARNING: the linear algebra engine uses floating-point types of larger"
                         " byte size than `lin`. Loss of information is likely.\n");
+
+    }
 
     scalar *data = view->data;
     size_t k = 0, rs = view->row_stride, cs = view->column_stride;
     for (size_t i = 0; i < nrow; i++) {
         for (size_t j = 0; j < ncol; j++) {
-            new_data[k++] = data[i * rs + j * cs];
+            new_data[k++] = (scalar_t)data[i * rs + j * cs];
         }
     }
 
@@ -144,3 +146,28 @@ matrix_t *init_matrix_token_from_view(const matrixv_t *view) {
     return out;
 }
 
+
+scalar_t *init_scalar_token_from_linalg_scalar(const scalar *scalar) {
+    if (!scalar) {
+        return NULL;
+    }
+
+    /* Allocate memory for the scalar_t */
+    scalar_t *out = malloc(sizeof(scalar_t));
+    if (!out) {
+        return NULL;
+    }
+
+    /* 
+    * Warn the user if scalar_t has smaller bit width than linalg's scalar.
+    * NOTE: this warning (and the other in token.c) will likely need to change if
+    * you modify the scalar_t struct 
+    */
+    if (sizeof(scalar_t) < sizeof(scalar))
+        fprintf(stderr, "WARNING: the linear algebra engine uses floating-point types of larger"
+                        " byte size than `lin`. Loss of information is likely.\n");
+
+    *out = *(scalar_t *)scalar;
+
+    return out;
+}

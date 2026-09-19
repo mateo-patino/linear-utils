@@ -61,10 +61,19 @@ matrixv_t* create_matrix_view(const matrix_t *matrix, arena_t *arena);
 * Initializes a matrix_t struct from a linalg matrix view. 
 *
 * All scalar data accessible through the view is converted to a scalar_t type
-* and allocated on the heap. Ro and column counts are preserved. 
+* and allocated on the heap. Row and column counts are preserved. 
 * 
 * It returns a pointer to a heap-allocated matrix_t struct upon success or NULL upon failure.
 */
 matrix_t *init_matrix_token_from_view(const matrixv_t *view);
+
+
+/*
+* Initializes a scalar_t struct from a linalg scalar.
+*
+* It returns a pointer to a heap-allocated scalar upon success
+* and NULL upon failure.
+*/
+scalar_t *init_scalar_token_from_linalg_scalar(const scalar *scalar);
 
 #endif
