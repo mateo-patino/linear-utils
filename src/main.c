@@ -7,12 +7,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <assert.h>
 
 #include "types/token.h"
+#include "types/matrix.h"
 #include "lexer/lexer.h"
 #include "parser/parser.h"
 #include "semantic/semantic.h"
 #include "evaluator/evaluator.h"
+#include "printer/printer.h"
 #include "errorprinter.h"
 
 
@@ -101,10 +104,41 @@ int main(int argc, char **argv) {
 
     /* Evaluate the AST. `out` must be freed. */
     eval_status evaluate_status;
-    result_t *out = evaluate_ast(ast, &evaluate_status);
+    result_t *final_result = evaluate_ast(ast, &evaluate_status);
+    
+    if (evaluate_status != EVAL_OK || !final_result) {
+        assert(evaluate_status != EVAL_OK && !final_result);
+        fprintf(stderr, "Error: expression evaluation failed. %s\n", get_error());
+        goto FREE_AST_AND_TOKENS_FAIL;
+    }
 
-    free_result(out);
-    inspect_tokens(tokens, token_count);
+    /*
+    * Convert the result_t struct returned by the evaluator into a printout_t struct
+    * that the printer can display to the terminal.
+    */
+    printout_t pout;
+    if (final_result->type == MATRIX_RES) {
+        pout.type = MATRIX_PRINTOUT;
+        pout.obj = init_matrix_token_from_view((const matrixv_t *)final_result->obj);
+    }
+    else {
+        assert(final_result->type == SCALAR_RES);
+        pout.type = SCALAR_PRINTOUT;
+        pout.obj = init_scalar_token_from_linalg_scalar((const scalar *)final_result->obj);
+    }
+
+    if (!pout.obj) {
+        fprintf(stderr, "Error: could not allocate memory.\n");
+        free_result(final_result);
+        goto FREE_AST_AND_TOKENS_FAIL;
+    }
+
+    /* TODO: now feed pout to the printer! */
+
+
+    /* TODO: improve your failure cleanup/goto routine. It's currently getting really awkward. */
+    (void)inspect_tokens;
+    free_result(final_result);
     fully_free_tokens(tokens, token_count);
     fully_free_ast(ast);
 
