@@ -98,3 +98,49 @@ matrixv_t* create_matrix_view(const matrix_t *matrix, arena_t *arena) {
     free(temp_data);
     return out;
 }
+
+
+
+matrix_t *init_matrix_token_from_view(const matrixv_t *view) {
+    if (!view) {
+        return NULL;
+    }
+
+    /* Allocate memory for the scalar data */
+    size_t nrow = view->nrow, ncol = view->ncol;
+    scalar_t *new_data = malloc(nrow * ncol * sizeof(scalar_t));
+    if (!new_data) {
+        return NULL;
+    }
+
+    /* 
+    * Warn the user if scalar_t has smaller bit width than linalg's scalar.
+    * NOTE: this warning (and the other in token.c) will likely need to change if
+    * you modify the scalar_t struct 
+    */
+    if (sizeof(scalar_t) < sizeof(scalar))
+        fprintf(stderr, "WARNING: the linear algebra engine uses floating-point types of larger"
+                        " byte size than `lin`. Loss of information is likely.\n");
+
+    scalar *data = view->data;
+    size_t k = 0, rs = view->row_stride, cs = view->column_stride;
+    for (size_t i = 0; i < nrow; i++) {
+        for (size_t j = 0; j < ncol; j++) {
+            new_data[k++] = data[i * rs + j * cs];
+        }
+    }
+
+    /* Allocate new matrix_t struct */
+    matrix_t *out = malloc(sizeof(matrix_t));
+    if (!out) {
+        free(new_data);
+        return NULL;
+    }
+
+    out->data = new_data;
+    out->nrow = nrow;
+    out->ncol = ncol;
+
+    return out;
+}
+
