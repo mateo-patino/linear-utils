@@ -167,7 +167,7 @@ scalar_t *init_scalar_token_from_linalg_scalar(const scalar *scalar) {
         fprintf(stderr, "WARNING: the linear algebra engine uses floating-point types of larger"
                         " byte size than `lin`. Loss of information is likely.\n");
 
-    *out = *(scalar_t *)scalar;
+    *out = *scalar;
 
     return out;
 }
