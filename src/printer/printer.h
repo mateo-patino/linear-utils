@@ -2,6 +2,8 @@
 #define PRINTER_H
 
 
+#include "types/matrix.h"
+
 /*
 * Types of data that the printer can display to the screen.
 * See `printout_t` struct to understand how it's to be interpreted.
@@ -23,6 +25,23 @@ typedef struct {
     printout_type type;
     void *obj;
 } printout_t;
+
+
+/*
+* Pretty print `token->obj` according to its type.
+*/
+bool pretty_print(const printout_t *pout);
+
+
+/*
+* Pretty print a matrix_t token to stdout. 
+*/
+bool pretty_print_matrix(const matrix_t *matrix);
+
+/*
+* Pretty print a scalar_t token to stdout.
+*/
+bool pretty_print_scalar(const scalar_t *scalar);
 
 
 #endif
