@@ -2,6 +2,35 @@
 #include "errorprinter.h"
 
 #include <stdio.h>
+#include <math.h>
+
+
+static bool print_scalar(FILE *stream, const scalar_t *scalar, int precision, bool add_newline);
+static bool has_no_fractional_part(const scalar_t *scalar);
+
+static bool has_no_fractional_part(const scalar_t *scalar) {
+    return scalar && isfinite(*scalar) && *scalar == trunc(*scalar);
+}
+
+
+static bool print_scalar(FILE *stream, const scalar_t *scalar, int precision, bool add_newline) {
+    if (!stream || !scalar) {
+        return false;
+    }
+
+    if (has_no_fractional_part(scalar)) {
+        fprintf(stream, "%.0f", *scalar);
+    }
+    else {
+        fprintf(stream, PRISCALAR, precision, *scalar);
+    }
+
+    if (add_newline) {
+        fprintf(stream, "\n");
+    }
+
+    return true;
+}
 
 
 bool pretty_print(const printout_t *pout) {
@@ -25,7 +54,6 @@ bool pretty_print(const printout_t *pout) {
 }
 
 
-
 bool pretty_print_matrix(const matrix_t *matrix) {
     if (!matrix) {
         return false;
@@ -41,9 +69,6 @@ bool pretty_print_scalar(const scalar_t *scalar) {
         return false;
     }
 
-    /* TODO: add some way to check if the mantissa is completely zero, in which case we print as an integer */
-    fprintf(stdout, PRISCALAR "\n", SCALAR_PRECISION, *scalar);
-
-    return true;
+    return print_scalar(stdout, scalar, SCALAR_PRECISION, true);
 }
 
