@@ -133,7 +133,12 @@ int main(int argc, char **argv) {
         goto FREE_AST_AND_TOKENS_FAIL;
     }
 
-    /* TODO: now feed pout to the printer! */
+    /* TODO: now feed pout to the printer! and don't forget to free it*/
+    if (!pretty_print(&pout) && !print_error_message()) {
+        fprintf(stderr, "Error: could not print object.\n");
+        free_result(final_result);
+        goto FREE_AST_AND_TOKENS_FAIL; /* Fix this crappy cleanup routine */
+    }
 
 
     /* TODO: improve your failure cleanup/goto routine. It's currently getting really awkward. */
