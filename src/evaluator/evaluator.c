@@ -1036,6 +1036,11 @@ result_t *evaluate_ast(const ast_t *ast, eval_status *status) {
     }
 
     free_arena(arena);
+    
+    if (status) {
+        *status = get_status();
+    }
+
     return final;
 }
 
