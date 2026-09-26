@@ -3,11 +3,13 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <limits.h>
 
 
 static bool print_scalar(FILE *stream, const scalar_t *scalar, int precision, bool add_newline);
 static bool has_no_fractional_part(const scalar_t *scalar);
 static size_t get_max_column_width(const matrix_t *matrix);
+static size_t get_scalar_strlen(const scalar_t *scalar);
 
 
 /*
@@ -61,25 +63,36 @@ static size_t get_max_column_width(const matrix_t *matrix) {
     unsigned int nentry = matrix->nrow * matrix->ncol;
 
     size_t max_len = 0;
-    int len = 0;
+    size_t len = 0;
     for (unsigned int i = 0; i < nentry; i++) {
-
-        if (has_no_fractional_part(data + i)) {
-            len = snprintf(NULL, 0, "%.0f", data[i]); 
-        }
-        else {
-            len = snprintf(NULL, 0, PRISCALAR, SCALAR_PRECISION, data[i]);
-        }
-
-        if (len < 0) {
-            set_error("Could not get maximum column width.");
+        len = get_scalar_strlen(data + i);
+        if (len == SIZE_MAX) {
+            set_error("Could compute scalar string length");
             return SIZE_MAX;
         }
 
-        max_len = (size_t)len > max_len ? (size_t)len : max_len;
+        max_len = len > max_len ? len : max_len;
     }
 
     return max_len; 
+}
+
+
+/*
+* Returns the string length of a scalar upon success and SIZE_MAX
+* if snprintf fails.
+*/
+static size_t get_scalar_strlen(const scalar_t *scalar) {
+    if (!scalar) {
+        return SIZE_MAX;
+    }
+    
+    int len = has_no_fractional_part(scalar) ? snprintf(NULL, 0, "%.0f", *scalar) : snprintf(NULL, 0, PRISCALAR, SCALAR_PRECISION, *scalar);
+    if (len < 0) {
+        return SIZE_MAX;
+    }
+
+    return (size_t)len;
 }
 
 
@@ -90,10 +103,10 @@ bool pretty_print(const printout_t *pout) {
     
     bool ok = false;
     if (pout->type == SCALAR_PRINTOUT) {
-        ok = pretty_print_scalar((const scalar_t *)pout->obj);
+        ok = pretty_print_scalar(stdout, (const scalar_t *)pout->obj);
     }
     else if (pout->type == MATRIX_PRINTOUT) {
-        ok = pretty_print_matrix((const matrix_t *)pout->obj);
+        ok = pretty_print_matrix(stdout, (const matrix_t *)pout->obj);
     }
 
     if (!ok) {
@@ -104,28 +117,41 @@ bool pretty_print(const printout_t *pout) {
 }
 
 
-bool pretty_print_matrix(const matrix_t *matrix) {
+bool pretty_print_matrix(FILE *stream, const matrix_t *matrix) {
     if (!matrix) {
         return false;
     } 
 
-    size_t col_width = get_max_column_width(matrix);
-    if (col_width == SIZE_MAX) {
+    /* Find the maximum column width needed to display all entries */
+    size_t width = get_max_column_width(matrix);
+    if (width == SIZE_MAX) {
         set_error("Could not print output.");
         return false;
     }
 
+    /* Print all entries aligned to the right. */
+    const scalar_t *data = matrix->data;
+    unsigned int nrow = matrix->nrow, ncol = matrix->ncol;
+
+    for (unsigned int i = 0; i < nrow; i++) { 
+        fprintf(stream, "|");
+
+        for (unsigned int j = 0; j < ncol; j++) {
+            /* Print leading whitespaces to right-align value inside column */
+            
+        }
+    }
 
 
     return true;
 }
 
 
-bool pretty_print_scalar(const scalar_t *scalar) {
+bool pretty_print_scalar(FILE *stream, const scalar_t *scalar) {
     if (!scalar) {
         return false;
     }
 
-    return print_scalar(stdout, scalar, SCALAR_PRECISION, true);
+    return print_scalar(stream, scalar, SCALAR_PRECISION, true);
 }
 
