@@ -122,6 +122,7 @@ bool pretty_print_matrix(FILE *stream, const matrix_t *matrix) {
         return false;
     } 
 
+
     /* Find the maximum column width needed to display all entries */
     size_t width = get_max_column_width(matrix);
     if (width == SIZE_MAX) {
@@ -130,18 +131,29 @@ bool pretty_print_matrix(FILE *stream, const matrix_t *matrix) {
     }
 
     /* Print all entries aligned to the right. */
-    const scalar_t *data = matrix->data;
+    const scalar_t *data = matrix->data, *entry = NULL;
     unsigned int nrow = matrix->nrow, ncol = matrix->ncol;
+    size_t padding = 0;
 
     for (unsigned int i = 0; i < nrow; i++) { 
-        fprintf(stream, "|");
+        fprintf(stream, "| ");
 
         for (unsigned int j = 0; j < ncol; j++) {
-            /* Print leading whitespaces to right-align value inside column */
-            
-        }
-    }
+            entry = &data[i * ncol + j];
 
+            /* Print leading whitespaces to right-align value inside column */
+            padding = width - get_scalar_strlen(entry);
+            for (size_t k = 0; k < padding; k++) {
+                fputc(' ', stream);
+            }
+
+            print_scalar(stream, entry, SCALAR_PRECISION, false);
+
+            fputc(' ', stream);
+        }
+
+        fprintf(stream, "|\n");
+    }
 
     return true;
 }

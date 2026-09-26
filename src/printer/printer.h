@@ -4,6 +4,8 @@
 
 #include "types/matrix.h"
 
+#include <stdio.h>
+
 /*
 * Types of data that the printer can display to the screen.
 * See `printout_t` struct to understand how it's to be interpreted.
@@ -36,12 +38,12 @@ bool pretty_print(const printout_t *pout);
 /*
 * Pretty print a matrix_t token to stdout. 
 */
-bool pretty_print_matrix(const matrix_t *matrix);
+bool pretty_print_matrix(FILE *stream, const matrix_t *matrix);
 
 /*
 * Pretty print a scalar_t token to stdout.
 */
-bool pretty_print_scalar(const scalar_t *scalar);
+bool pretty_print_scalar(FILE *stream, const scalar_t *scalar);
 
 
 #endif
