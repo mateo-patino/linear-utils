@@ -28,7 +28,7 @@ typedef struct {
 
 
 /*
-* Pretty print `token->obj` according to its type.
+* Pretty print `pout->obj` according to its type.
 */
 bool pretty_print(const printout_t *pout);
 
