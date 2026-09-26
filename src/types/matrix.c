@@ -83,8 +83,8 @@ matrixv_t* create_matrix_view(const matrix_t *matrix, arena_t *arena) {
     temp_view->ncol = (size_t)matrix->ncol;
     temp_view->nrow = (size_t)matrix->nrow;
 
+    temp_view->row_stride = temp_view->ncol;
     temp_view->column_stride = 1;
-    temp_view->row_stride = 1;
 
     matrixv_t *out;
     size_t view_offset = awrite((char *)temp_view, sizeof(matrixv_t), _Alignof(matrixv_t), arena);
