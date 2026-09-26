@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
     }
 
     /* Evaluate the AST. `out` must be freed. */
-    eval_status evaluate_status;
+    eval_status evaluate_status = EVAL_OK;
     result_t *final_result = evaluate_ast(ast, &evaluate_status);
     
     if (evaluate_status != EVAL_OK || !final_result) {
@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
         goto FREE_AST_AND_TOKENS_FAIL;
     }
 
-    /* TODO: now feed pout to the printer! and don't forget to free it*/
+    /* TODO: now feed pout to the printer! and don't forget to free it*/ 
     if (!pretty_print(&pout) && !print_error_message()) {
         fprintf(stderr, "Error: could not print object.\n");
         free_result(final_result);
