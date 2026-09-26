@@ -122,6 +122,10 @@ bool pretty_print_matrix(FILE *stream, const matrix_t *matrix) {
         return false;
     } 
 
+    /*
+    * TODO: currently, the column width is applied to all columns. 
+    * The max column width should be applied on a per-column basis.
+    */
 
     /* Find the maximum column width needed to display all entries */
     size_t width = get_max_column_width(matrix);
