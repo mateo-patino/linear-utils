@@ -8,8 +8,9 @@
 
 static bool print_scalar(FILE *stream, const scalar_t *scalar, int precision, bool add_newline);
 static bool has_no_fractional_part(const scalar_t *scalar);
-static size_t get_max_column_width(const matrix_t *matrix);
+static size_t get_column_width(const matrix_t *matrix, unsigned int j);
 static size_t get_scalar_strlen(const scalar_t *scalar);
+
 
 
 /*
@@ -54,24 +55,22 @@ static bool has_no_fractional_part(const scalar_t *scalar) {
 * It returns the maximum column width found upon success and SIZE__MAX 
 * if an error occurs.
 */
-static size_t get_max_column_width(const matrix_t *matrix) {
+static size_t get_column_width(const matrix_t *matrix, unsigned int j) {
     if (!matrix || !matrix->data) {
         return 0;
     }
 
     const scalar_t *data = matrix->data;
-    unsigned int nentry = matrix->nrow * matrix->ncol;
+    const scalar_t *entry = NULL;
 
-    size_t max_len = 0;
-    size_t len = 0;
-    for (unsigned int i = 0; i < nentry; i++) {
-        len = get_scalar_strlen(data + i);
-        if (len == SIZE_MAX) {
-            set_error("Could compute scalar string length");
-            return SIZE_MAX;
-        }
+    size_t max_len = 0, entry_strlen = 0;
+    unsigned int nrow = matrix->nrow;
 
-        max_len = len > max_len ? len : max_len;
+    for (unsigned int i = 0; i < nrow; i++) {
+        entry = &data[i * nrow + j];
+        entry_strlen = get_scalar_strlen(entry);
+
+        max_len = entry_strlen > max_len ? entry_strlen : max_len;
     }
 
     return max_len; 
@@ -122,19 +121,6 @@ bool pretty_print_matrix(FILE *stream, const matrix_t *matrix) {
         return false;
     } 
 
-    /*
-    * TODO: currently, the column width is applied to all columns. 
-    * The max column width should be applied on a per-column basis.
-    */
-
-    /* Find the maximum column width needed to display all entries */
-    size_t width = get_max_column_width(matrix);
-    if (width == SIZE_MAX) {
-        set_error("Could not print output.");
-        return false;
-    }
-
-    /* Print all entries aligned to the right. */
     const scalar_t *data = matrix->data, *entry = NULL;
     unsigned int nrow = matrix->nrow, ncol = matrix->ncol;
     size_t padding = 0;
@@ -146,7 +132,7 @@ bool pretty_print_matrix(FILE *stream, const matrix_t *matrix) {
             entry = &data[i * ncol + j];
 
             /* Print leading whitespaces to right-align value inside column */
-            padding = width - get_scalar_strlen(entry);
+            padding = get_column_width(matrix, j) - get_scalar_strlen(entry);
             for (size_t k = 0; k < padding; k++) {
                 fputc(' ', stream);
             }
