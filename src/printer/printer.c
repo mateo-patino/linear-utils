@@ -68,7 +68,7 @@ static size_t get_column_width(const matrix_t *matrix, unsigned int j) {
 
     for (unsigned int i = 0; i < nrow; i++) {
         entry = &data[i * nrow + j];
-        entry_strlen = get_scalar_strlen(entry);
+        entry_strlen = get_scalar_strlen(entry); /* Could fail, but error handling here is hardly useful */
 
         max_len = entry_strlen > max_len ? entry_strlen : max_len;
     }
@@ -144,6 +144,14 @@ bool pretty_print_matrix(FILE *stream, const matrix_t *matrix) {
 
         fprintf(stream, "|\n");
     }
+
+    /*
+    * NEEDSWORK: In the routine above, every time we move to the next column, we
+    * compute its width. It would be a faster design to precompute the column widths
+    * and store them outside the for loop so that the padding loop can query the 
+    * width that corresponds to column j. It's a small optimization but nevertheless
+    * possible.
+    */
 
     return true;
 }
