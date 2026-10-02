@@ -220,8 +220,6 @@ static matrixv_t *deep_copy_matrixv(const matrixv_t *tmp) {
 }
 
 
-
-
 static matrixv_t *deep_copy_matrixv_arena(const matrixv_t *tmp, arena_t *arena) {
     if (!tmp || !arena) {
         return NULL;
@@ -743,7 +741,7 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
     * NEEDSWORK: i shouldn't have used malloc/free here. This should simply re-use the 
     * memory arena for the temporary view, no additional malloc'ing here is neeed.
     */
-    matrixv_t *tmp_view = deep_copy_matrixv((matrixv_t *)right->obj);
+    matrixv_t *tmp_view = deep_copy_matrixv_arena((matrixv_t *)right->obj, arena);
     if (!tmp_view) {
         return NULL;
     }    
@@ -751,14 +749,10 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
     scalar det;
     int ok;
     if ((ok = matrix_det(&det, tmp_view)) == -1) {
-        free(tmp_view);
         return NULL;
     }
-    /* 1 is returned if the matrix is singular. NEEDSWORK: printing a warning to the screen 
-    * is acceptable for now, but for the long term we need a better way to report math errors */
     else if (ok == 1) {
         fprintf(stderr, "Linear algebra: singular matrix, could not compute determinant.\n");
-        free(tmp_view);
         return NULL;
     }
 
@@ -766,7 +760,6 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
     tmp.obj = copy_scalar(det, arena);
 
     if (!tmp.obj) {
-        free(tmp_view);
         return NULL;
     }
 
