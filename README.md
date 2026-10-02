@@ -6,7 +6,7 @@
 all in a command-line format.
 
 > [!WARNING]
-> **This project is actively under development.** The APIs, linear algebra routines, and the overall architecture of the program may change as I work on it.
+> **This project is actively under development.** Parts of the architecture and functionality may change as I work on it.
 
 ## Highlights
 
@@ -80,12 +80,14 @@ If you know C and some linear algebra, please feel free to make a push request! 
 - [x] Lexer, parser, and semantic test suites
 - [x] Memory-check script using Valgrind
 - [x] Elementary row operations, Gauss-Jordan elimination, and convertion to upper-triangular
+- [x] Pretty printing module for displaying matrices to the terminal in a nice format
 
 ### In progress
 
-- [ ] Pretty printing module capable of displaying evaluated results cleanly to the terminal
 - [ ] Linear algebra test suite, likely to be implemented in C++ using Eigen to check for numerical correctness
 - [ ] Evaluation layer test suite
+- [ ] Pretty printer module test suite.
+- [ ] A "solve" subcommand that takes a coefficient matrix and a column vector and solves the corresponding linear system. 
 
 ## Building
 
