@@ -50,6 +50,22 @@ static void inspect_tokens(const token_t *tokens, size_t tc) {
 
 int main(int argc, char **argv) {
 
+    /*
+    * These pointers below point to memory blocks
+    * of data structures used by main() that should
+    * be when main() exits.
+    *
+    * There are 4 data structures that main() allocates and must free:
+    * tokens array, abstract syntax tree, result_t struct containing the final
+    * result of evaluating the AST, and the data in a printout_t struct containing
+    * data to be printed to the terminal.
+    */
+    token_t *tokens = NULL;
+    size_t token_count = 0;
+    ast_t *ast = NULL;
+    result_t *final_result = NULL;
+    int retval = EXIT_SUCCESS;
+
     /* Input must be a single string */
     if (argc != 2) {
         fprintf(stderr, "Usage: %s [expression]\n", argv[0]);
@@ -61,35 +77,41 @@ int main(int argc, char **argv) {
     
     /* Create tokens array. This array is on the heap and must be freed. */
     tokens_status tok_status = TOKENS_OK;
-    size_t token_count = 0;
-    token_t *tokens;
 
     if (!(tokens = create_tokens_from_string(expr, &token_count, &tok_status)) 
         || tok_status != TOKENS_OK) {
         if (!print_error_message()) {
             fprintf(stderr, "Error: Invalid expression. %s\n", expr);
         }
-        goto FREE_TOKENS_FAIL;
+
+        retval = EXIT_FAILURE;
+        goto FREE_AND_EXIT;
     }
     else if (!token_count) {
         fprintf(stderr, "Error: Missing expression.\n");
-        goto FREE_TOKENS_FAIL;
+
+        retval = EXIT_FAILURE;
+        goto FREE_AND_EXIT;
     }
     /* Quite unlikely but technically possible */
     else if (token_count > INT_MAX) {
         fprintf(stderr, "Error: Expression too large. Only %i logical tokens are supported.\n", 
                 INT_MAX);
-        goto FREE_TOKENS_FAIL;
+
+        retval = EXIT_FAILURE;
+        goto FREE_AND_EXIT;
     }
 
     /* Parse the tokens to create an AST */
     parse_status parse_status = PARSE_OK;
-    ast_t *ast = create_ast_from_tokens(tokens, token_count, &parse_status); 
+    ast = create_ast_from_tokens(tokens, token_count, &parse_status); 
     if (parse_status != PARSE_OK) {
         if (!print_error_message()) {
             fprintf(stderr, "Error: Invalid expression. %s\n", expr);
         }
-        goto FREE_AST_AND_TOKENS_FAIL;
+
+        retval = EXIT_FAILURE;
+        goto FREE_AND_EXIT;
     }
 
     /* Perform semantic (math) checks on the AST */
@@ -99,22 +121,28 @@ int main(int argc, char **argv) {
         if (!print_error_message()) {
             fprintf(stderr, "Error: Mathematically invalid expression.\n");
         }
-        goto FREE_AST_AND_TOKENS_FAIL;
+
+        retval = EXIT_FAILURE;
+        goto FREE_AND_EXIT;
     }
 
     /* Evaluate the AST. `out` must be freed. */
     eval_status evaluate_status = EVAL_OK;
-    result_t *final_result = evaluate_ast(ast, &evaluate_status);
+    final_result = evaluate_ast(ast, &evaluate_status);
     
     if (evaluate_status != EVAL_OK || !final_result) {
         assert(evaluate_status != EVAL_OK && !final_result);
         fprintf(stderr, "Error: expression evaluation failed. %s\n", get_error());
-        goto FREE_AST_AND_TOKENS_FAIL;
+
+        retval = EXIT_FAILURE;
+        goto FREE_AND_EXIT;
     }
 
     /*
     * Convert the result_t struct returned by the evaluator into a printout_t struct
     * that the printer can display to the terminal.
+    *
+    * Note that that pout->obj will point to allocated memory that must be freed.
     */
     printout_t pout;
     if (final_result->type == MATRIX_RES) {
@@ -129,33 +157,26 @@ int main(int argc, char **argv) {
 
     if (!pout.obj) {
         fprintf(stderr, "Error: could not allocate memory.\n");
-        free_result(final_result);
-        goto FREE_AST_AND_TOKENS_FAIL;
+
+        retval = EXIT_FAILURE;
+        goto FREE_AND_EXIT;
     }
 
-    /* TODO: now feed pout to the printer! and don't forget to free it*/ 
+    /* Feed printout into the printer module */
     if (!pretty_print(&pout) && !print_error_message()) {
         fprintf(stderr, "Error: could not print object.\n");
-        free_result(final_result);
-        goto FREE_AST_AND_TOKENS_FAIL; /* Fix this crappy cleanup routine */
+        
+        retval = EXIT_FAILURE;
+        goto FREE_AND_EXIT;
     }
 
 
-    /* TODO: improve your failure cleanup/goto routine. It's currently getting really awkward. */
-    (void)inspect_tokens;
+FREE_AND_EXIT:
+    /* TODO: implement free_pout_obj and ensure these freers handle null pointers */
+    free_pout_obj(pout.obj);
     free_result(final_result);
-    fully_free_tokens(tokens, token_count);
     fully_free_ast(ast);
-
-    return EXIT_SUCCESS;
-
-FREE_TOKENS_FAIL:
     fully_free_tokens(tokens, token_count);
-    return EXIT_FAILURE;
 
-
-FREE_AST_AND_TOKENS_FAIL:
-    fully_free_tokens(tokens, token_count);
-    fully_free_ast(ast);
-    return EXIT_FAILURE;
+    return retval;
 }
