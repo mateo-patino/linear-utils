@@ -51,9 +51,9 @@ static void inspect_tokens(const token_t *tokens, size_t tc) {
 int main(int argc, char **argv) {
 
     /*
-    * These pointers below point to memory blocks
-    * of data structures used by main() that should
-    * be when main() exits.
+    * These pointers below point to memory blocks of data structures used by main() 
+    * that should be freed when main() exits. pout must be initialized here because
+    * it is fed to the free_printout_obj() function at the end of main().
     *
     * There are 4 data structures that main() allocates and must free:
     * tokens array, abstract syntax tree, result_t struct containing the final
@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
     size_t token_count = 0;
     ast_t *ast = NULL;
     result_t *final_result = NULL;
+    printout_t pout = {0};
     int retval = EXIT_SUCCESS;
 
     /* Input must be a single string */
@@ -144,7 +145,6 @@ int main(int argc, char **argv) {
     *
     * Note that that pout->obj will point to allocated memory that must be freed.
     */
-    printout_t pout = {0};
     if (final_result->type == MATRIX_RES) {
         pout.type = MATRIX_PRINTOUT;
         pout.obj = init_matrix_token_from_view((const matrixv_t *)final_result->obj);
