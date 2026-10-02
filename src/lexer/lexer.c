@@ -371,20 +371,6 @@ token_t *create_tokens_from_string(const char *str, size_t *token_count, tokens_
         tc++;
     }
 
-    /* Terminate the tokens array with the marker type TOKENS_END */
-    if (tc == size) {
-        errno = 0;
-        tokens = resize_tokens(tokens, &size);
-        if (errno == ENOMEM) {
-            set_error("realloc() failed"); 
-            if (status) { *status = TOKENS_MEMORY_FAILURE; }
-            goto FREE_UPON_ERROR_2;
-        }
-    }
-    tokens[tc].type = TOKENS_END;
-    tokens[tc].obj = NULL;
-    /* We do not increment tc here because tc counts non-END tokens */
-
     if (token_count) { *token_count = tc; }
     if (status) { *status = TOKENS_OK; }
     free(m_str);

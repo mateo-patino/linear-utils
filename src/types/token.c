@@ -171,9 +171,6 @@ void print_token(const token_t *tok) {
         case RPAREN:
             fprintf(stdout, "RPAREN");
             break;
-        case TOKENS_END:
-            fprintf(stdout, "TOKENS_END");
-            break;
         default:
             break;
     }

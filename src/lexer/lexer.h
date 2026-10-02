@@ -46,9 +46,7 @@ tokens_status create_scalar_token(const char *str, scalar_t scalar, token_t *dst
 
 
 /*
-* Takes a constant string and produces a token array terminated with a token of type TOKENS_END. 
-* It returns a pointer to an TOKENS_END-terminated array of token_t upon sucess and NULL upon 
-* failure.
+* Takes a constant string and produces a token array.  
 *
 * If 'token_count' is not NULL, the number of tokens generated is written there.
 *

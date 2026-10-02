@@ -23,7 +23,6 @@ typedef enum {
     MATRIX,
     LPAREN,
     RPAREN,
-    TOKENS_END /* signals the end of a token_t sequence */
 } token_type;
 
 
