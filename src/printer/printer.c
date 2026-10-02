@@ -65,10 +65,10 @@ static size_t get_column_width(const matrix_t *matrix, unsigned int j) {
     const scalar_t *entry = NULL;
 
     size_t max_len = 0, entry_strlen = 0;
-    unsigned int nrow = matrix->nrow;
+    unsigned int nrow = matrix->nrow, ncol = matrix->ncol;
 
     for (unsigned int i = 0; i < nrow; i++) {
-        entry = &data[i * nrow + j];
+        entry = &data[i * ncol + j];
         entry_strlen = get_scalar_strlen(entry); /* Could fail, but error handling here is hardly useful */
 
         max_len = entry_strlen > max_len ? entry_strlen : max_len;
