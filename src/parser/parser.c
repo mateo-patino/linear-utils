@@ -152,7 +152,6 @@ static int find_last_op_index(const token_t *tokens, int low, int high) {
         switch (tok_type) {
             case SCALAR:
             case MATRIX:
-            case TOKENS_END:
                 continue;
             case LPAREN:
                 current_depth++;
@@ -242,7 +241,6 @@ static bool has_balanced_parenthesis(const token_t *tokens, size_t sz) {
                 open_count--;
                 continue;
 
-            case TOKENS_END:
             default:
                 continue;
         }
