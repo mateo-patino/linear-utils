@@ -30,13 +30,23 @@ typedef struct {
 
 
 /*
+* Frees the `obj` member of a printout_t struct
+*/
+void free_printout_obj(printout_t *pout);
+
+
+/*
 * Pretty print `pout->obj` according to its type.
 */
 bool pretty_print(const printout_t *pout);
 
 
 /*
-* Pretty print a matrix_t token to stdout. 
+* Pretty print a matrix_t token to stdout.
+*
+* Entries in the matrix are right-alignede within each column. The width of
+* any column is determined by the maximum string width of any entry in that
+* column.
 */
 bool pretty_print_matrix(FILE *stream, const matrix_t *matrix);
 
