@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
     *
     * Note that that pout->obj will point to allocated memory that must be freed.
     */
-    printout_t pout;
+    printout_t pout = {0};
     if (final_result->type == MATRIX_RES) {
         pout.type = MATRIX_PRINTOUT;
         pout.obj = init_matrix_token_from_view((const matrixv_t *)final_result->obj);
@@ -172,8 +172,7 @@ int main(int argc, char **argv) {
 
 
 FREE_AND_EXIT:
-    /* TODO: implement free_pout_obj and ensure these freers handle null pointers */
-    free_pout_obj(pout.obj);
+    free_printout_obj(&pout);
     free_result(final_result);
     fully_free_ast(ast);
     fully_free_tokens(tokens, token_count);
