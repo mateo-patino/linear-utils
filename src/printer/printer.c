@@ -1,5 +1,6 @@
 #include "printer/printer.h"
 #include "errorprinter.h"
+#include "types/matrix.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -94,6 +95,21 @@ static size_t get_scalar_strlen(const scalar_t *scalar) {
     return (size_t)len;
 }
 
+
+void free_printout_obj(printout_t *pout) {
+    if (!pout || !pout->obj) { 
+        return;
+    }
+
+    void *obj = pout->obj;
+    if (pout->type == MATRIX_PRINTOUT) {
+        free(((matrix_t *)obj)->data);
+        free(obj);
+    }
+    else if (pout->type == SCALAR_PRINTOUT) {
+        free((scalar_t *)obj);
+    }
+}
 
 bool pretty_print(const printout_t *pout) {
     if (!pout) {
