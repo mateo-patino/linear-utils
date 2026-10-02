@@ -60,7 +60,7 @@ const char **operator_alias[NUM_OP] = {
 
 
 void fully_free_tokens(token_t *tokens, size_t count) {
-    if (count == 0) {
+    if (!tokens || count == 0) {
         return;
     }
 
