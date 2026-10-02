@@ -763,7 +763,6 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
         return NULL;
     }
 
-    free(tmp_view);
     return copy_result(&tmp, arena);
 }
 
