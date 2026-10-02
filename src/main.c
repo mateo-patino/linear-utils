@@ -170,6 +170,8 @@ int main(int argc, char **argv) {
         goto FREE_AND_EXIT;
     }
 
+    /* to avoid compile error */
+    (void)inspect_tokens;
 
 FREE_AND_EXIT:
     free_printout_obj(&pout);
