@@ -60,6 +60,10 @@ const char **operator_alias[NUM_OP] = {
 
 
 void fully_free_tokens(token_t *tokens, size_t count) {
+    if (count == 0) {
+        return;
+    }
+
     free_tokens_by_count(tokens, count);
     free(tokens);
 }
