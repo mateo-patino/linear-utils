@@ -55,6 +55,5 @@ int matrix_rref(matrixv_t *A);
 * undefined behavior.
 */
 int matrix_inv(matrixv_t *restrict C, matrixv_t *restrict A);
-/* TODO: implement the row operation kernel for this bad boy above */ 
 
 #endif
