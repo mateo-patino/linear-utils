@@ -1,0 +1,3 @@
+[submodule "tests/linalg/eigen"]
+	path = tests/linalg/eigen
+	url = https://gitlab.com/libeigen/eigen.git
