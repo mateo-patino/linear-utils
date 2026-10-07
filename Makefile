@@ -102,3 +102,6 @@ clean:
 
 # Include compile-time generated dependencies
 -include $(APP_OBJS:.o=.d)
+-include $(TEST_OBJS:.o=.d)
+-include $(TEST_LINALG_OBJS:.o=.d)
+-include $(LINALG_OBJS:.o=.d)
