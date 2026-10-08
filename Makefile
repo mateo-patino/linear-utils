@@ -89,7 +89,7 @@ $(OBJ_DIR)/linalg_tests/%.o: $(TEST_LINALG_DIR)/%.cpp
 
 
 # Compile database
-$(COMPILE_DB):
+$(COMPILE_DB): $(APP_SRCS) $(TEST_SRCS) $(TEST_LINALG_SRCS) compile_db.py
 	# compile_db.py needs target .json file, curdir, compile command, list of source files
 	python3 compile_db.py \
 		--filename "$@" \
