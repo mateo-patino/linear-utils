@@ -38,11 +38,25 @@ if __name__ == "__main__":
         help="List of source file paths to save compile commands for"
     )
 
+    # Tell the program to append to JSON file. This flag lets you call this program multiple times and append on each call.
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Append compile entries to the file provided"
+    )
+
 
     args = parser.parse_args()
 
-    # Produce list of dictionaries, one per source file
+    file_name = args.filename
     data = []
+
+    # If append flag is up, read any existing data from the file, append to it, and rewrite it
+    if args.append:
+        with open(file_name, "r") as existing_file:
+            data = json.load(existing_file)
+
+    # Append new entries
     for src_name in args.srcs:
         data.append({   
             "directory": args.curdir,
@@ -51,6 +65,6 @@ if __name__ == "__main__":
         })
 
     # Dump list of dictionaries in target file
-    with open(args.filename, "w") as file:
+    with open(file_name, "w") as file:
         json.dump(data, file, indent=4)
 
