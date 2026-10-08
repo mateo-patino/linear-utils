@@ -17,7 +17,7 @@ OPEN_MP := $(shell echo "int main(void) { return 0; }" | $(CC) -fopenmp -x c - -
 
 CFLAGS = -std=$(CSTD) -Wall -Wextra -Werror -pedantic-errors $(OPEN_MP) -g
 CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -pedantic-errors -g
-CPPFLAGS = -Isrc
+CPPFLAGS = -Isrc -Itests
 LDLIBS = -lm
 
 APP_TARGET = lin
@@ -96,6 +96,20 @@ $(COMPILE_DB):
 		--curdir "$(CURDIR)" \
 		--compile-cmd "$(COMPILE.c)" \
 		--srcs $(APP_SRCS)
+	# Append compile entries for the lin tests 
+	python3 compile_db.py \
+		--filename "$@" \
+		--curdir "$(CURDIR)" \
+		--compile-cmd "$(COMPILE.c)" \
+		--srcs $(TEST_SRCS) \
+		--append
+	# Append compile entries for linalg tests	
+	python3 compile_db.py \
+		--filename "$@" \
+		--curdir "$(CURDIR)" \
+		--compile-cmd "$(COMPILE.cpp)" \
+		--srcs $(TEST_LINALG_SRCS) \
+		--append
 
 clean:
 	rm -rf $(OBJ_DIR) $(APP_TARGET) $(TEST_TARGET) $(TEST_LINALG_TARGET)
