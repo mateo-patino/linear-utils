@@ -27,6 +27,8 @@ class matrix_view {
         matrix_view(size_t nrow, size_t ncol);
         matrix_view(size_t nrow, size_t ncol, const std::vector<scalar>& entries);
 
+        void resize_view(size_t nrow, size_t ncol);
+
         const matrixv_t *get_view() const;
         matrixv_t *get_view();
 };

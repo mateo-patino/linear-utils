@@ -40,6 +40,19 @@ matrix_view::matrix_view(size_t nrow, size_t ncol, const std::vector<scalar>& en
 }
 
 
+/*
+* Resizes the internal data vector a size of `nrow` * `ncol`.
+*/
+void matrix_view::resize_view(size_t nrow, size_t ncol) {
+        
+    data_.resize(nrow * ncol);
+
+    view_.data = data_.data();
+    view_.nrow = nrow;
+    view_.ncol = ncol;
+}
+
+
 /* 
 * Returns a mutable pointer to the internal matrixv_t struct
 */
