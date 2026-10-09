@@ -27,7 +27,7 @@ matrix_view::matrix_view(size_t nrow, size_t ncol) {
 *
 * The values from `entries` are deep copied.
 */
-matrix_view::matrix_view(size_t nrow, size_t ncol, std::vector<scalar>& entries) {  
+matrix_view::matrix_view(size_t nrow, size_t ncol, const std::vector<scalar>& entries) {  
 
     /* Automatically performs a deep copy of the std::vector's data */
     data_ = entries;
