@@ -85,7 +85,7 @@ void perr(const char *fmt, ...) {
 }
 
 
-bool are_equal(double a, double b, double rel_tol=1e-12, double abs_tol=1e-15) {
+bool are_equal(double a, double b, double rel_tol, double abs_tol) {
     
     /* Handles infinity and NaN */
     if (a == b) {

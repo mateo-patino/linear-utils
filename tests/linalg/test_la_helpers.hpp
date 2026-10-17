@@ -63,7 +63,7 @@ void perr(const char *fmt, ...);
 /*
 * Returns true if two floating-point doubles `a` and `b` are equal to each other.
 */
-bool are_equal(double a, double b, double rel_tol=1e-12, double abs_tol=1e-15);
+bool are_equal(double a, double b, double rel_tol = 1e-12, double abs_tol = 1e-15);
 
 
 /*
