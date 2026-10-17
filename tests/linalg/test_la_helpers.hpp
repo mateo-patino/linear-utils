@@ -34,4 +34,14 @@ class matrix_view {
 };
 
 
+/* 
+* Struct to conveniently hold two operand matrix views.
+* It is widely used to define tables of matrix_pair structs
+* and then run a set of tests on all matrix pairs on the table,
+* where each pair represents the operands for some matrix operation.
+*/
+struct matrix_pair {
+    matrix_view in1;
+    matrix_view in2;
+};
 #endif
