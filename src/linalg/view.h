@@ -5,6 +5,11 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+    #define RESTRICT __restrict
+#else
+    #define RESTRICT restrict
+#endif
 
 /*
 * The core matrix structure in this library is the  matrix view
