@@ -8,6 +8,14 @@
 #include <vector>
 
 
+/* ANSI COLORS */
+#define ANSI_RED "\x1b[31m"
+#define ANSI_GREEN "\x1b[32m"
+#define ANSI_CYAN "\x1b[36m"
+#define ANSI_RESET "\x1b[0m"
+#define BOLD "\x1b[1m"
+
+
 /*
 * This class is a small wrapper around the C matrix view (matrixv_t) struct.
 * 
@@ -44,4 +52,55 @@ struct matrix_pair {
     matrix_view in1;
     matrix_view in2;
 };
+
+
+/* 
+* Calls fprintf(stderr, fmt, ...). Used to print error messages when a test fails.
+*/
+void perr(const char *fmt, ...);
+
+
+/*
+* Returns true if two floating-point doubles `a` and `b` are equal to each other.
+*/
+bool are_equal(double a, double b, double rel_tol=1e-12, double abs_tol=1e-15);
+
+
+/*
+* This test suite uses macros to assert conditions.
+*
+* The macros below perform various condition checks. Their names 
+* should be self-explanatory.
+*/
+#define ASSERT_TRUE(x) \
+    do { \
+        if (!(x)) { \
+            assert_true_failed(#x, __FILE__, __LINE__, __func__); \
+            return false; \
+        } \
+    } while (0)
+
+void assert_true_failed(const char *expr, const char *file, int line, const char *func);
+
+/* For 3 matrixv_t matrices, check that C = A + B. */
+#define ASSERT_CORRECT_ADD(C, A, B) \
+    do { \
+        const matrixv_t *_C = (const matrixv_t *)C; \
+        const matrixv_t *_A = (const matrixv_t *)A; \
+        const matrixv_t *_B = (const matrixv_t *)B; \
+        if (!assert_correct_add(_C, _A, _B)) { \
+            assert_correct_add_failed(_C, _A, _B, __FILE__, __LINE__, __func__); \
+            return false; \
+        } \
+    } while(0)
+
+/* 
+* Returns true if C = A + B, where A + B is performed by Eigen and 
+* the result is checked against `C`
+*/
+bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B);
+void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 
+                               const char *file, int line, const char *func);
+
+
 #endif
