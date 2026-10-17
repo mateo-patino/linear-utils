@@ -211,12 +211,19 @@ bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t 
 void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 
                                const char *file, int line, const char *func) {
     
-    perr(BOLD "%s " ANSI_RED "FAILED" ANSI_RESET "\n", func);
-    perr(PAD "Attempted to ADD matrices:\n");
+    /* TODO: it's kinda useless to see the error message and the "got" but
+    * but not getting the expected result. Modify the assert_correct_add
+    * so that the result from Eigen is returned in an in-out parameter and
+    * pass that result here to be printed as the "expected" result */
+
+    perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
+    perr("\n", PAD, "Attempted to ADD matrices:\n");
+    perr("\n", PAD, "A =\n");
     pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
+    perr("\n", PAD, "B = \n");
     pretty_print_matrix(std::cerr, B, sizeof(PAD) - 1);
-    perr(PAD "Got:\n");
+    perr("\n", PAD, "Got:\n");
     pretty_print_matrix(std::cerr, C, sizeof(PAD) - 1);
-    perr(PAD "at %s:%i\n", file, line);
-    perr(PAD "in %s\n", func);
+    perr("\n", PAD, "at ", file, ":", line, "\n");
+    perr(PAD, "in ", func, "\n");
 }
