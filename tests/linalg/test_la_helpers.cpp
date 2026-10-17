@@ -1,8 +1,10 @@
 #include "linalg/test_la_helpers.hpp"
+#include "Eigen_helpers.hpp"
 #include <linalg/eigen/Eigen/Dense>
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 
 /* C inteface */
@@ -77,11 +79,10 @@ matrixv_t *matrix_view::get_view() {
 }
 
 
-void perr(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
+
+template <typename... Args>
+void perr(Args&&... args) {
+    (std::cerr << ... << std::forward<Args>(args));
 }
 
 
@@ -105,6 +106,9 @@ void assert_true_failed(const char *expr, const char *file, int line, const char
     perr("   at %s:%i\n", file, line);
     perr("   in %s\n", func);
 }
+
+
+
 
 
 /* 
@@ -138,4 +142,16 @@ bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t 
     }
 
     return true;
+}
+
+
+
+void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 
+                               const char *file, int line, const char *func) {
+    
+    perr(BOLD "%s " ANSI_RED "FAILED" ANSI_RESET "\n", func);
+    perr("Attempted to add matrices:\n");
+    perr("Got:\n");
+    perr("   at %s:%i\n", file, line);
+    perr("   in %s\n", func);
 }

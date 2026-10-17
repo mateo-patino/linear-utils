@@ -6,6 +6,7 @@
 #include "linalg/scalar.h"
 
 #include <vector>
+#include <iostream>
 
 
 /* ANSI COLORS */
@@ -32,6 +33,7 @@ class matrix_view {
 
     public:
 
+        matrix_view();
         matrix_view(size_t nrow, size_t ncol);
         matrix_view(size_t nrow, size_t ncol, const std::vector<scalar>& entries);
 
@@ -57,13 +59,21 @@ struct matrix_pair {
 /* 
 * Calls fprintf(stderr, fmt, ...). Used to print error messages when a test fails.
 */
-void perr(const char *fmt, ...);
+template <typename... Args>
+void perr(Args&&... args);
 
 
 /*
 * Returns true if two floating-point doubles `a` and `b` are equal to each other.
 */
 bool are_equal(double a, double b, double rel_tol = 1e-12, double abs_tol = 1e-15);
+
+
+/*
+* Pretty prints a matrixv_t struct `matrix` to `stream`.
+* `wspace` worth of whitespaces are printed to the left of the matrix.
+*/
+void pretty_print_matrix(const matrixv_t *matrix);
 
 
 /*
