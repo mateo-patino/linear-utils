@@ -24,6 +24,7 @@ matrix_view::matrix_view(const matrix_view& other)
     view_.data = data_.data();
 }
 
+
 /*
 * Initialize a view with dimensions (nrow, ncol) to default values.
 */
