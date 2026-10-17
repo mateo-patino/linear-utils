@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <string>
 
 
 /* C inteface */
@@ -102,13 +105,60 @@ bool are_equal(double a, double b, double rel_tol, double abs_tol) {
 
 void assert_true_failed(const char *expr, const char *file, int line, const char *func) {
     perr(BOLD "%s " ANSI_RED "FAILED" ANSI_RESET "\n", func);
-    perr("   Assertion failed: %s\n", expr);
-    perr("   at %s:%i\n", file, line);
-    perr("   in %s\n", func);
+    perr(PAD "Assertion failed: %s\n", expr);
+    perr(PAD "at %s:%i\n", file, line);
+    perr(PAD "in %s\n", func);
 }
 
 
+void pretty_print_matrix(std::ostream& stream, const matrixv_t *matrix, int wspace) {
+    if (!matrix) {
+        return;
+    }
 
+    /* Get the string length of a scalar `x` */
+    auto get_scalar_strlen = [](scalar x) {
+        std::ostringstream ss;
+        ss << x;
+        return ss.str().length();
+    }; 
+
+
+    /* Compute column widths */
+    auto get_column_width = [&get_scalar_strlen](const matrixv_t *mat, size_t col) {
+
+        size_t rs = mat->row_stride, cs = mat->column_stride;
+        std::size_t curr_strlen = 0, max_strlen = get_scalar_strlen(mat->data[0 * rs + col * cs]);
+
+        for (size_t i = 1; i < mat->nrow; i++) {
+            curr_strlen = get_scalar_strlen(mat->data[i * rs + col * cs]);
+            max_strlen = curr_strlen > max_strlen ? curr_strlen : max_strlen;
+        }
+
+        return max_strlen;
+    };
+
+    std::vector<std::size_t> col_widths;
+    for (size_t j = 0; j < matrix->ncol; j++) {
+        col_widths.push_back(get_column_width(matrix, j));
+    }
+
+    /* Print matrix */
+    const scalar *data = matrix->data;
+    size_t nrow = matrix->nrow, ncol = matrix->ncol, rs = matrix->row_stride, cs = matrix->column_stride;
+
+    for (size_t i = 0; i < nrow; i++) {
+
+        stream << std::string(wspace, ' ');
+        stream << "| ";
+
+        for (size_t j = 0; j < ncol; j++) {
+            stream << std::setw(col_widths[j]) << data[i * rs + j * cs] << " "; 
+        }
+
+        stream << "|\n";
+    }
+}
 
 
 /* 
@@ -150,8 +200,11 @@ void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const mat
                                const char *file, int line, const char *func) {
     
     perr(BOLD "%s " ANSI_RED "FAILED" ANSI_RESET "\n", func);
-    perr("Attempted to add matrices:\n");
-    perr("Got:\n");
-    perr("   at %s:%i\n", file, line);
-    perr("   in %s\n", func);
+    perr(PAD "Attempted to ADD matrices:\n");
+    pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
+    pretty_print_matrix(std::cerr, B, sizeof(PAD) - 1);
+    perr(PAD "Got:\n");
+    pretty_print_matrix(std::cerr, C, sizeof(PAD) - 1);
+    perr(PAD "at %s:%i\n", file, line);
+    perr(PAD "in %s\n", func);
 }

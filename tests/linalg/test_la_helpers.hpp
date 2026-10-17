@@ -16,6 +16,8 @@
 #define ANSI_RESET "\x1b[0m"
 #define BOLD "\x1b[1m"
 
+#define PAD "   "
+
 
 /*
 * This class is a small wrapper around the C matrix view (matrixv_t) struct.
@@ -33,7 +35,7 @@ class matrix_view {
 
     public:
 
-        matrix_view();
+        matrix_view() = default;
         matrix_view(size_t nrow, size_t ncol);
         matrix_view(size_t nrow, size_t ncol, const std::vector<scalar>& entries);
 
@@ -73,7 +75,7 @@ bool are_equal(double a, double b, double rel_tol = 1e-12, double abs_tol = 1e-1
 * Pretty prints a matrixv_t struct `matrix` to `stream`.
 * `wspace` worth of whitespaces are printed to the left of the matrix.
 */
-void pretty_print_matrix(const matrixv_t *matrix);
+void pretty_print_matrix(std::ostream& stream, const matrixv_t *matrix, int wspace);
 
 
 /*
