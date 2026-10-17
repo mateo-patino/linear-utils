@@ -36,6 +36,7 @@ class matrix_view {
     public:
 
         matrix_view() = default;
+        matrix_view(const matrix_view& other);
         matrix_view(size_t nrow, size_t ncol);
         matrix_view(size_t nrow, size_t ncol, const std::vector<scalar>& entries);
 

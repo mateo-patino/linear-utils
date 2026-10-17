@@ -13,7 +13,16 @@
 /* C inteface */
 #include "linalg/view.h"
 #include "linalg/scalar.h"
+        
 
+/*
+* Copy constructor
+*/
+matrix_view::matrix_view(const matrix_view& other) 
+    : view_(other.view_), data_(other.data_) {
+    
+    view_.data = data_.data();
+}
 
 /*
 * Initialize a view with dimensions (nrow, ncol) to default values.
@@ -63,6 +72,8 @@ void matrix_view::resize_view(size_t nrow, size_t ncol) {
     view_.data = data_.data();
     view_.nrow = nrow;
     view_.ncol = ncol;
+    view_.row_stride = ncol;
+    view_.column_stride = 1;
 }
 
 
