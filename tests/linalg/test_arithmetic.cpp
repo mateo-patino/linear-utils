@@ -1,17 +1,10 @@
 #include "linalg/test_arithmetic.hpp"
 #include "linalg/test_la_helpers.hpp"
 
+#include <cassert>
+
 /* C interface */
-extern "C" {
-    #include "linalg/arithmetic.h"
-}
-
-
-/* Struct to hold two operand matrix views */
-struct matrix_pair {
-    matrix_view in1;
-    matrix_view in2;
-};
+#include "linalg/arithmetic.h"
 
 
 /*
@@ -36,7 +29,7 @@ static const std::vector<matrix_pair> valid_square_pairs = {
         { 2, 2, { 0, 0, 0, 0 } }
     },
     {
-        { 2, 2, { -1 -1 -1 -1 } },
+        { 2, 2, { -1, -1, -1, -1 } },
         { 2, 2, { 1, 1, 1, 1 } }
     },
     {
@@ -49,26 +42,38 @@ static const std::vector<matrix_pair> valid_square_pairs = {
     }
 };
 
+
 /* 
-* Matrix-matrix addition.
-* 
+* Matrix-matrix addition on valid square matrices..
 */
 static bool test_matrix_add(void) {
-    
-    matrix_view out; 
+
+    matrix_view out_view;
     const matrixv_t *in1, *in2;
+    matrixv_t *out;
+
     for (size_t i = 0; i < valid_square_pairs.size(); i++) {
         
         in1 = valid_square_pairs[i].in1.get_view();
         in2 = valid_square_pairs[i].in2.get_view();
 
-        out.resize_view(in1->nrow, in1->ncol); 
+        out_view.resize_view(in1->nrow, in1->ncol); 
+        out = out_view.get_view();
 
-        /* TODO */
-        ASSERT_EQ_INT(matrix_add(out.get_view(), in1, in2) == 0); 
+        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!\n");
+    
+        ASSERT_TRUE(matrix_add(out, in1, in2) == 0); 
+        ASSERT_CORRECT_ADD(out, in1, in2);
     }
 
     return true;
 }
+
+
+unsigned run_arithmetic_tests(void) 
+{
+    return test_matrix_add() ? 1 : 0;
+}
+
 
 
