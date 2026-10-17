@@ -95,7 +95,7 @@ int matrix_sub(matrixv_t *C, const matrixv_t *A, const matrixv_t *B) {
 * undefined behavior (updating an entry and then reading it when the original value was 
 * expected, specifically ). Hence, usage like A = AB or A = AA is not allowed.
 */
-int matrix_mul(matrixv_t *restrict C, const matrixv_t *restrict A, const matrixv_t *restrict B) {
+int matrix_mul(matrixv_t *RESTRICT C, const matrixv_t *RESTRICT A, const matrixv_t *RESTRICT B) {
     if (!C || !A || !B || A->ncol != B->nrow || C->nrow != A->nrow
         || C->ncol != B->ncol) {
         return -1;

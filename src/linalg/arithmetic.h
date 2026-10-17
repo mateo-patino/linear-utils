@@ -4,6 +4,10 @@
 
 #include "linalg/view.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
 * Addition, subrtaction, and multiplication for matrices.
 *
@@ -31,7 +35,11 @@ int matrix_sub(matrixv_t *C, const matrixv_t *A, const matrixv_t *B);
 *
 * Scalar-matrix multiplication does allow pointer aliasing, so A = sA is allowed.
 */
-int matrix_mul(matrixv_t *restrict C, const matrixv_t *restrict A, const matrixv_t *restrict B);
+int matrix_mul(matrixv_t *RESTRICT C, const matrixv_t *RESTRICT A, const matrixv_t *RESTRICT B);
 int scalar_matrix_mul(matrixv_t *C, scalar s, const matrixv_t *A);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
