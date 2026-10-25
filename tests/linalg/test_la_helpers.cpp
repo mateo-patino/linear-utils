@@ -124,12 +124,14 @@ void assert_true_failed(const char *expr, const char *file, int line, const char
 
 
 void pretty_print_matrix(std::ostream& stream, const matrixv_t *matrix, int wspace) {
-    if (!matrix) {
+    if (!matrix || !matrix->data) {
+        std::cerr << "Error: NULL pointer to matrixv_t\n";
         return;
     }
 
     /* Get the string length of a scalar `x` */
     auto get_scalar_strlen = [](scalar x) {
+        /* NOTE: ostringstream represents floating-point values with 6 decimal places */
         std::ostringstream ss;
         ss << x;
         return ss.str().length();
@@ -151,6 +153,7 @@ void pretty_print_matrix(std::ostream& stream, const matrixv_t *matrix, int wspa
     };
 
     std::vector<std::size_t> col_widths;
+    col_widths.reserve(matrix->ncol);
     for (size_t j = 0; j < matrix->ncol; j++) {
         col_widths.push_back(get_column_width(matrix, j));
     }
@@ -173,16 +176,64 @@ void pretty_print_matrix(std::ostream& stream, const matrixv_t *matrix, int wspa
 }
 
 
+void pretty_print_matrix(std::ostream& stream, const Eigen::MatrixXd& matrix, int wspace) {
+    
+    /* Get the string length of a scalar `x` */
+    auto get_scalar_strlen = [](double x) {
+        /* NOTE: ostringstream represents floating-point values with 6 decimal places */
+        std::ostringstream ss;
+        ss << x;
+        return ss.str().length();
+    };
+
+
+    /* Compute column width of column `col` */
+    auto get_column_width = [&get_scalar_strlen](const Eigen::MatrixXd& matrix, Eigen::Index col) {
+        std::size_t curr_strlen = 0, max_strlen = get_scalar_strlen(matrix(0, col));
+
+        for (Eigen::Index i = 1; i < matrix.rows(); i++) {
+            curr_strlen = get_scalar_strlen(matrix(i, col));
+            max_strlen = curr_strlen > max_strlen ? curr_strlen : max_strlen;
+        }
+
+        return max_strlen;
+    };
+
+    std::vector<std::size_t> col_widths;
+    col_widths.reserve(matrix.cols());
+    for (Eigen::Index j = 0; j < matrix.cols(); j++) {
+        col_widths.push_back(get_column_width(matrix, j));
+    }
+
+    /* Print matrix */
+    for (Eigen::Index i = 0, rows = matrix.rows(); i < rows; i++) {
+
+        stream << std::string(wspace, ' ');
+        stream << "| ";
+
+        for (Eigen::Index j = 0, cols = matrix.cols(); j < cols; j++) {
+            stream << std::setw(col_widths[j]) << matrix(i, j) << " ";
+        }
+
+        stream << "|\n";
+    }
+}
+
+
 /* 
 * Returns true if C = A + B, where A + B is performed by Eigen and 
 * the result is checked against `C`
+*
+* `expected` is an in-out parameter where the expected sum according to Eigen is written.
 */
-bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B) {
+bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected) {
 
     /* Compute A + B using Eigen */
     const Eigen::MatrixXd eigen_A = get_Eigen_matrix(A);
     const Eigen::MatrixXd eigen_B = get_Eigen_matrix(B);
     const Eigen::MatrixXd eigen_C = eigen_A + eigen_B;
+    expected = eigen_C;
+    
 
     /* Check dimensions match */
     if (static_cast<size_t>(eigen_C.rows()) != C->nrow || static_cast<size_t>(eigen_C.cols()) != C->ncol) {
@@ -209,13 +260,8 @@ bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t 
 
 
 void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 
-                               const char *file, int line, const char *func) {
+                               const char *file, int line, const char *func, const Eigen::MatrixXd& expected) {
     
-    /* TODO: it's kinda useless to see the error message and the "got" but
-    * but not getting the expected result. Modify the assert_correct_add
-    * so that the result from Eigen is returned in an in-out parameter and
-    * pass that result here to be printed as the "expected" result */
-
     perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
     perr("\n", PAD, "Attempted to ADD matrices:\n");
     perr("\n", PAD, "A =\n");
@@ -224,6 +270,8 @@ void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const mat
     pretty_print_matrix(std::cerr, B, sizeof(PAD) - 1);
     perr("\n", PAD, "Got:\n");
     pretty_print_matrix(std::cerr, C, sizeof(PAD) - 1);
+    perr("\n", PAD, "Expected:\n");
+    pretty_print_matrix(std::cerr, expected, sizeof(PAD) - 1);
     perr("\n", PAD, "at ", file, ":", line, "\n");
     perr(PAD, "in ", func, "\n");
 }

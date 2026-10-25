@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <iostream>
+#include <linalg/eigen/Eigen/Dense>
 
 
 /* ANSI COLORS */
@@ -77,6 +78,7 @@ bool are_equal(double a, double b, double rel_tol = 1e-12, double abs_tol = 1e-1
 * `wspace` worth of whitespaces are printed to the left of the matrix.
 */
 void pretty_print_matrix(std::ostream& stream, const matrixv_t *matrix, int wspace);
+void pretty_print_matrix(std::ostream& stream, const Eigen::MatrixXd& matrix, int wspace);
 
 
 /*
@@ -101,8 +103,9 @@ void assert_true_failed(const char *expr, const char *file, int line, const char
         const matrixv_t *_C = (const matrixv_t *)C; \
         const matrixv_t *_A = (const matrixv_t *)A; \
         const matrixv_t *_B = (const matrixv_t *)B; \
-        if (!assert_correct_add(_C, _A, _B)) { \
-            assert_correct_add_failed(_C, _A, _B, __FILE__, __LINE__, __func__); \
+        Eigen::MatrixXd expected; \
+        if (!assert_correct_add(_C, _A, _B, expected)) { \
+            assert_correct_add_failed(_C, _A, _B, __FILE__, __LINE__, __func__, expected); \
             return false; \
         } \
     } while(0)
@@ -110,10 +113,12 @@ void assert_true_failed(const char *expr, const char *file, int line, const char
 /* 
 * Returns true if C = A + B, where A + B is performed by Eigen and 
 * the result is checked against `C`
+*
+* Expected sum is written to `expected`.
 */
-bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B);
+bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected);
 void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 
-                               const char *file, int line, const char *func);
+                               const char *file, int line, const char *func, const Eigen::MatrixXd& expected);
 
 
 #endif
