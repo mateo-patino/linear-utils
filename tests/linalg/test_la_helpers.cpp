@@ -266,11 +266,16 @@ bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t 
 }
 
 
+/*
+* Prints an error message for a failed addition (or subtraction) test case
+*/
 void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 
-                               const char *file, int line, const char *func, const Eigen::MatrixXd& expected) {
+                               const char *file, int line, const char *func, const Eigen::MatrixXd& expected, bool subtract) {
+
+    std::string operation = subtract ? "SUB" : "ADD";
     
     perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
-    perr("\n", PAD, "Attempted to ADD matrices:\n");
+    perr("\n", PAD, "Attempted to ", operation, " matrices:\n");
     perr("\n", PAD, "A =\n");
     pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
     perr("\n", PAD, "B = \n");

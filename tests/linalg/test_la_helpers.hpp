@@ -105,7 +105,7 @@ void assert_true_failed(const char *expr, const char *file, int line, const char
         const matrixv_t *_B = (const matrixv_t *)B; \
         Eigen::MatrixXd expected; \
         if (!assert_correct_add(_C, _A, _B, expected, false)) { \
-            assert_correct_add_failed(_C, _A, _B, __FILE__, __LINE__, __func__, expected); \
+            assert_correct_add_failed(_C, _A, _B, __FILE__, __LINE__, __func__, expected, false); \
             return false; \
         } \
     } while(0)
@@ -119,7 +119,20 @@ void assert_true_failed(const char *expr, const char *file, int line, const char
 */
 bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected, bool subtract);
 void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 
-                               const char *file, int line, const char *func, const Eigen::MatrixXd& expected);
+                               const char *file, int line, const char *func, const Eigen::MatrixXd& expected, bool subtract);
 
+
+/* For 3 matrixv_t matrices, check that C = A - B. */
+#define ASSERT_CORRECT_SUB(C, A, B) \
+    do { \
+        const matrixv_t *_C = (const matrixv_t *)C; \
+        const matrixv_t *_A = (const matrixv_t *)A; \
+        const matrixv_t *_B = (const matrixv_t *)B; \
+        Eigen::MatrixXd expected; \
+        if (!assert_correct_add(_C, _A, _B, expected, true)) { \
+            assert_correct_add_failed(_C, _A, _B, __FILE__, __LINE__, __func__, expected, true); \
+            return false; \
+        } \
+    } while(0)
 
 #endif
