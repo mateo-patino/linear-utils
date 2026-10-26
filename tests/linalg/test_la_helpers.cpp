@@ -222,16 +222,24 @@ void pretty_print_matrix(std::ostream& stream, const Eigen::MatrixXd& matrix, in
 
 /* 
 * Returns true if C = A + B, where A + B is performed by Eigen and 
-* the result is checked against `C`
+* the result is checked against `C` if `subtract` is false. Same operation
+* is performed but with C = A - B if `subtract` is true.
 *
 * `expected` is an in-out parameter where the expected sum according to Eigen is written.
 */
-bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected) {
+bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected, bool subtract) {
 
     /* Compute A + B using Eigen */
     const Eigen::MatrixXd eigen_A = get_Eigen_matrix(A);
     const Eigen::MatrixXd eigen_B = get_Eigen_matrix(B);
-    const Eigen::MatrixXd eigen_C = eigen_A + eigen_B;
+    Eigen::MatrixXd eigen_C;
+
+    if (subtract) {
+        eigen_C = eigen_A - eigen_B;
+    }
+    else {
+        eigen_C = eigen_A + eigen_B;
+    }
     expected = eigen_C;
     
 
@@ -256,7 +264,6 @@ bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t 
 
     return true;
 }
-
 
 
 void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 

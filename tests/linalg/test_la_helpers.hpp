@@ -104,7 +104,7 @@ void assert_true_failed(const char *expr, const char *file, int line, const char
         const matrixv_t *_A = (const matrixv_t *)A; \
         const matrixv_t *_B = (const matrixv_t *)B; \
         Eigen::MatrixXd expected; \
-        if (!assert_correct_add(_C, _A, _B, expected)) { \
+        if (!assert_correct_add(_C, _A, _B, expected, false)) { \
             assert_correct_add_failed(_C, _A, _B, __FILE__, __LINE__, __func__, expected); \
             return false; \
         } \
@@ -112,11 +112,12 @@ void assert_true_failed(const char *expr, const char *file, int line, const char
 
 /* 
 * Returns true if C = A + B, where A + B is performed by Eigen and 
-* the result is checked against `C`
+* the result is checked against `C` if `subtract` is false. Same operation
+* is performed but with C = A - B if `subtract` is true.
 *
 * Expected sum is written to `expected`.
 */
-bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected);
+bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected, bool subtract);
 void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, 
                                const char *file, int line, const char *func, const Eigen::MatrixXd& expected);
 
