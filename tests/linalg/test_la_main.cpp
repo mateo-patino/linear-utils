@@ -1,6 +1,9 @@
 /*
 * Entry point to the linalg test suite.
 */
+#include "linalg/test_arithmetic.hpp"
+
+#include <iostream>
 
 int main(void) {
     
@@ -15,6 +18,12 @@ int main(void) {
     *
     * We'll want the same fork-exec sandboxing used in lin.
     */
+    
+    int arithmetic_total;
+    unsigned arithmetic_success_count = run_arithmetic_tests(arithmetic_total);
+
+    /* TODO: do a proper summary message this is just temporary */
+    std::cout << "TOTAL: " << arithmetic_total << " PASS: " << arithmetic_success_count << "\n";
 
     return 0;
 }
