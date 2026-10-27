@@ -2,6 +2,7 @@
 #include "linalg/test_la_helpers.hpp"
 
 #include <cassert>
+#include <array>
 
 /* C interface */
 #include "linalg/arithmetic.h"
@@ -104,9 +105,58 @@ static bool test_matrix_add(void) {
 }
 
 
-unsigned run_arithmetic_tests(void) 
-{
-    return test_matrix_add() ? 1 : 0;
+
+/* 
+* Matrix-matrix addition on valid square matrices..
+*/
+static bool test_matrix_sub(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in1, *in2;
+    matrixv_t *out;
+
+    for (size_t i = 0; i < valid_square_pairs.size(); i++) {
+        
+        in1 = valid_square_pairs[i].in1.get_view();
+        in2 = valid_square_pairs[i].in2.get_view();
+
+        out_view.resize_view(in1->nrow, in1->ncol); 
+        out = out_view.get_view();
+
+        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!\n");
+    
+        ASSERT_TRUE(matrix_sub(out, in1, in2) == 0); 
+        ASSERT_CORRECT_SUB(out, in1, in2);
+    }
+
+    return true;
+}
+
+
+/*
+* To run a test, add it to this table, which is read by run_arithmetic_tests
+* to perform all tests listed here.
+*
+* This style of initialization should work in the C++17+ standard
+*/
+static const std::array test_cases = {
+    test_matrix_add,
+    test_matrix_sub
+};
+
+
+unsigned run_arithmetic_tests(int& total) {
+
+    /* Run all tests in `test_cases` */ 
+    unsigned success_count = 0;
+    for (auto test : test_cases) {
+        if (test()) {
+            success_count++;
+        }
+    }
+    total = test_cases.size();
+
+    return success_count;
 }
 
 
