@@ -105,7 +105,6 @@ static bool test_matrix_add(void) {
 }
 
 
-
 /* 
 * Matrix-matrix addition on valid square matrices..
 */
@@ -167,9 +166,9 @@ static bool test_matrix_mmul(void) {
 * This style of initialization should work in the C++17+ standard
 */
 static const std::array test_cases = {
-    test_matrix_add,
-    test_matrix_sub,
-    test_matrix_mmul
+    TEST(test_matrix_add),
+    TEST(test_matrix_sub),
+    TEST(test_matrix_mmul)
 };
 
 
@@ -178,8 +177,9 @@ unsigned run_arithmetic_tests(int& total) {
     /* Run all tests in `test_cases` */ 
     unsigned success_count = 0;
 
-    for (auto test : test_cases) {
-        if (test()) {
+    for (const test_case& test : test_cases) {
+        if (test.run()) {
+            print_success(test);
             success_count++;
         }
     }
