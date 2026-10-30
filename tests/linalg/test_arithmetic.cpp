@@ -18,8 +18,8 @@ static const std::vector<matrix_pair> valid_square_pairs = {
         { 1, 1, { 1 } }
     },
     {
-        { 2, 1, { 1, 2 } },
-        { 2, 1, { 3, 4 } }
+        { 2, 2, { 1, 2, 0, 0 } },
+        { 2, 2, { 3, 4, -1, -1 } }
     },
     {
         { 2, 2, { 1, 2, 3, 4 } },
@@ -95,7 +95,7 @@ static bool test_matrix_add(void) {
         out_view.resize_view(in1->nrow, in1->ncol); 
         out = out_view.get_view();
 
-        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!\n");
+        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!");
     
         ASSERT_TRUE(matrix_add(out, in1, in2) == 0); 
         ASSERT_CORRECT_ADD(out, in1, in2);
@@ -123,10 +123,37 @@ static bool test_matrix_sub(void) {
         out_view.resize_view(in1->nrow, in1->ncol); 
         out = out_view.get_view();
 
-        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!\n");
+        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!");
     
         ASSERT_TRUE(matrix_sub(out, in1, in2) == 0); 
         ASSERT_CORRECT_SUB(out, in1, in2);
+    }
+
+    return true;
+}
+
+
+/* 
+* Matrix-matrix multiplication in the order in1 * in2.
+*/
+static bool test_matrix_mmul(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in1, *in2;
+    matrixv_t *out;
+
+    for (size_t i = 0; i < valid_square_pairs.size(); i++) {
+        
+        in1 = valid_square_pairs[i].in1.get_view();
+        in2 = valid_square_pairs[i].in2.get_view();
+
+        assert(in1->ncol == in2->nrow && "Invalid matrix dimensions for multiplication!");
+
+        out_view.resize_view(in1->nrow, in2->ncol); 
+        out = out_view.get_view();
+
+        ASSERT_TRUE(matrix_mul(out, in1, in2) == 0); 
+        ASSERT_CORRECT_MMUL(out, in1, in2);
     }
 
     return true;
@@ -141,7 +168,8 @@ static bool test_matrix_sub(void) {
 */
 static const std::array test_cases = {
     test_matrix_add,
-    test_matrix_sub
+    test_matrix_sub,
+    test_matrix_mmul
 };
 
 
@@ -149,11 +177,13 @@ unsigned run_arithmetic_tests(int& total) {
 
     /* Run all tests in `test_cases` */ 
     unsigned success_count = 0;
+
     for (auto test : test_cases) {
         if (test()) {
             success_count++;
         }
     }
+
     total = test_cases.size();
 
     return success_count;
