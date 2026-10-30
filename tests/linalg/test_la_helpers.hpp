@@ -1,6 +1,10 @@
 #ifndef TEST_LA_HELPERS_HPP
 #define TEST_LA_HELPERS_HPP
 
+#include <functional>
+#include <string>
+#include <utility>
+
 /* C interfaces */
 #include "linalg/view.h"
 #include "linalg/scalar.h"
@@ -8,6 +12,35 @@
 #include <vector>
 #include <iostream>
 #include <linalg/eigen/Eigen/Dense>
+
+
+/*
+* A container class for a unit test.
+* `test_name` should generally be the name of the function that gets
+* called when running this test (i.e. the name of `test_func_`).
+*/
+class test_case {
+
+    private:
+        std::string test_name_;
+        std::function<bool(void)> test_func_;
+
+    public:
+        test_case(std::string test_name, std::function<bool(void)> test_func)
+            : test_name_(std::move(test_name)), test_func_(std::move(test_func)) {}
+
+        const std::string& name() const {
+            return test_name_;
+        }
+
+        bool run() const {
+            return test_func_();
+        }
+};
+
+
+/* For constructing a test_case object from a test function. */
+#define TEST(x) test_case{#x, x}
 
 
 /* ANSI COLORS */
@@ -65,6 +98,12 @@ struct matrix_pair {
 */
 template <typename... Args>
 void perr(Args&&... args);
+
+
+/*
+* Prints test_case.name() PASS to stderr.
+*/
+void print_success(const test_case& test_case);
 
 
 /*
@@ -134,5 +173,25 @@ void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const mat
             return false; \
         } \
     } while(0)
+
+
+/* For 3 matrixv_t matrices, check that C = AB. */
+#define ASSERT_CORRECT_MMUL(C, A, B) \
+    do { \
+        const matrixv_t *_C = (const matrixv_t *)C; \
+        const matrixv_t *_A = (const matrixv_t *)A; \
+        const matrixv_t *_B = (const matrixv_t *)B; \
+        Eigen::MatrixXd expected; \
+        if (!assert_correct_mmul(_C, _A, _B, expected)) { \
+            assert_correct_mmul_failed(_C, _A, _B, __FILE__, __LINE__, __func__, expected); \
+            return false; \
+        } \
+    } while(0)
+
+
+bool assert_correct_mmul(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected);
+void assert_correct_mmul_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B,
+                                const char *file, int line, const char *func, const Eigen::MatrixXd& expected);
+
 
 #endif

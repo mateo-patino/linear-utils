@@ -116,10 +116,15 @@ bool are_equal(double a, double b, double rel_tol, double abs_tol) {
 
 
 void assert_true_failed(const char *expr, const char *file, int line, const char *func) {
-    perr(BOLD "%s " ANSI_RED "FAILED" ANSI_RESET "\n", func);
-    perr(PAD "Assertion failed: %s\n", expr);
-    perr(PAD "at %s:%i\n", file, line);
-    perr(PAD "in %s\n", func);
+    perr(BOLD, func, ANSI_RED, " FAILED", ANSI_RESET, "\n");
+    perr(PAD, "Assertion failed: ", expr, "\n");
+    perr(PAD, "at ", file, ":", line, "\n");
+    perr(PAD, "in ", func, "\n");
+}
+
+
+void print_success(const test_case& test_case) {
+    perr(BOLD, test_case.name(), " ", ANSI_RESET, ANSI_GREEN, "PASS\n", ANSI_RESET);
 }
 
 
@@ -228,6 +233,11 @@ void pretty_print_matrix(std::ostream& stream, const Eigen::MatrixXd& matrix, in
 * `expected` is an in-out parameter where the expected sum according to Eigen is written.
 */
 bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected, bool subtract) {
+    if (!C || !A || !B) {
+        std::cerr << "Error: NULL matrix view!\n";
+        return false;
+    } 
+
 
     /* Compute A + B using Eigen */
     const Eigen::MatrixXd eigen_A = get_Eigen_matrix(A);
@@ -242,27 +252,7 @@ bool assert_correct_add(const matrixv_t *C, const matrixv_t *A, const matrixv_t 
     }
     expected = eigen_C;
     
-
-    /* Check dimensions match */
-    if (static_cast<size_t>(eigen_C.rows()) != C->nrow || static_cast<size_t>(eigen_C.cols()) != C->ncol) {
-        return false;
-    }
-
-    /* Compare Eigen's result to `C` */
-    size_t nrow = C->nrow, ncol = C->ncol, rs = C->row_stride, cs = C->column_stride;
-    scalar *C_data = C->data;
-
-    for (size_t i = 0; i < nrow; i++) {
-        for (size_t j = 0; j < ncol; j++) {
-
-            if (!are_equal(C_data[i * rs + j * cs], eigen_C(i, j))) {
-                return false;
-            }
-
-        }
-    }
-
-    return true;
+    return are_equal_matrices(eigen_C, C);
 }
 
 
@@ -276,6 +266,44 @@ void assert_correct_add_failed(const matrixv_t *C, const matrixv_t *A, const mat
     
     perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
     perr("\n", PAD, "Attempted to ", operation, " matrices:\n");
+    perr("\n", PAD, "A =\n");
+    pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
+    perr("\n", PAD, "B = \n");
+    pretty_print_matrix(std::cerr, B, sizeof(PAD) - 1);
+    perr("\n", PAD, "Got:\n");
+    pretty_print_matrix(std::cerr, C, sizeof(PAD) - 1);
+    perr("\n", PAD, "Expected:\n");
+    pretty_print_matrix(std::cerr, expected, sizeof(PAD) - 1);
+    perr("\n", PAD, "at ", file, ":", line, "\n");
+    perr(PAD, "in ", func, "\n");
+}
+
+
+bool assert_correct_mmul(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B, Eigen::MatrixXd& expected) {
+    if (!C || !A || !B) {
+        std::cerr << "Error: NULL matrix view!\n";
+        return false;
+    } 
+
+    /* Compute AB using Eigen */
+    const Eigen::MatrixXd eigen_A = get_Eigen_matrix(A);
+    const Eigen::MatrixXd eigen_B = get_Eigen_matrix(B);
+    const Eigen::MatrixXd eigen_C = eigen_A * eigen_B;
+
+    expected = eigen_C;
+
+    return are_equal_matrices(eigen_C, C);
+}
+
+
+/*
+* Prints an error message for a failed matrix multiplication test case
+*/
+void assert_correct_mmul_failed(const matrixv_t *C, const matrixv_t *A, const matrixv_t *B,
+                                const char *file, int line, const char *func, const Eigen::MatrixXd& expected) {
+
+    perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
+    perr("\n", PAD, "Attempted to multiply matrices:\n");
     perr("\n", PAD, "A =\n");
     pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
     perr("\n", PAD, "B = \n");
