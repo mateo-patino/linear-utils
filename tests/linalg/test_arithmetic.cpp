@@ -12,7 +12,7 @@
 * Each row in this table is a matrix. Two rows form the set of input matrices
 * for a single test case.
 */
-static const std::vector<matrix_pair> valid_square_pairs = {
+static const std::vector<matrix_pair> valid_square = {
     {
         { 1, 1, { 1 } },
         { 1, 1, { 1 } }
@@ -78,6 +78,143 @@ static const std::vector<matrix_pair> valid_square_pairs = {
 };
 
 
+/*
+* Row-vector pairs used to exercise non-square matrices. The table includes
+* zero entries, signed values, fractions, repeated entries, and values with
+* large and small magnitudes that remain safely below overflow thresholds.
+*/
+static const std::vector<matrix_pair> valid_row = {
+    {
+        { 1, 1, { 0 } },
+        { 1, 1, { -0.0 } }
+    },
+    {
+        { 1, 2, { 1, -1 } },
+        { 1, 2, { -1, 1 } }
+    },
+    {
+        { 1, 3, { 1, 2, 3 } },
+        { 1, 3, { -3, 0, 3 } }
+    },
+    {
+        { 1, 4, { 0.25, -0.5, 0.75, -1.0 } },
+        { 1, 4, { -0.25, 0.5, -0.75, 1.0 } }
+    },
+    {
+        { 1, 5, { 1, 1, 1, 1, 1 } },
+        { 1, 5, { 0, 0, 0, 0, 0 } }
+    },
+    {
+        { 1, 6, { 1e-10, -1e-10, 1e-9, -1e-9, 1e-8, -1e-8 } },
+        { 1, 6, { -1e-10, 1e-10, -1e-9, 1e-9, -1e-8, 1e-8 } }
+    },
+    {
+        { 1, 7, { 10, -20, 30, -40, 50, -60, 70 } },
+        { 1, 7, { -7, 6, -5, 4, -3, 2, -1 } }
+    },
+    {
+        { 1, 8, { 1, 0, 0, 0, 0, 0, 0, 1 } },
+        { 1, 8, { 0, 1, 0, 0, 0, 0, 1, 0 } }
+    },
+    {
+        { 1, 9, { 1e10, -1e10, 1e10, -1e10, 1e-10, -1e-10, 1e-10, -1e-10, 0 } },
+        { 1, 9, { -1e10, 1e10, -1e10, 1e10, -1e-10, 1e-10, -1e-10, 1e-10, 0 } }
+    },
+    {
+        { 1, 10, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } },
+        { 1, 10, { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 } }
+    },
+    {
+        { 1, 3, { 1e100, -1e100, 1e-100 } },
+        { 1, 3, { -1e100, 1e100, -1e-100 } }
+    },
+    {
+        { 1, 4, { 0.333333333333, 0.666666666667, -0.333333333333, -0.666666666667 } },
+        { 1, 4, { 3, -3, 6, -6 } }
+    },
+    {
+        { 1, 5, { -5, -4, -3, -2, -1 } },
+        { 1, 5, { 1, 2, 3, 4, 5 } }
+    },
+    {
+        { 1, 8, { 0, 0, 0, 1, 0, 0, 0, 0 } },
+        { 1, 8, { 0, 0, 0, 0, 0, 0, 0, 1 } }
+    },
+    {
+        { 1, 10, { 2.5, -3.5, 4.5, -5.5, 6.5, -7.5, 8.5, -9.5, 10.5, -11.5 } },
+        { 1, 10, { -11.5, 10.5, -9.5, 8.5, -7.5, 6.5, -5.5, 4.5, -3.5, 2.5 } }
+    }
+};
+
+
+/*
+* Column-vector pairs used to exercise non-square matrices. The cases mirror
+* the row-vector coverage while retaining independent data and edge values.
+*/
+static const std::vector<matrix_pair> valid_column = {
+    {
+        { 1, 1, { 0 } },
+        { 1, 1, { -0.0 } }
+    },
+    {
+        { 2, 1, { 1, -1 } },
+        { 2, 1, { -1, 1 } }
+    },
+    {
+        { 3, 1, { 1, 2, 3 } },
+        { 3, 1, { -3, 0, 3 } }
+    },
+    {
+        { 4, 1, { 0.25, -0.5, 0.75, -1.0 } },
+        { 4, 1, { -0.25, 0.5, -0.75, 1.0 } }
+    },
+    {
+        { 5, 1, { 1, 1, 1, 1, 1 } },
+        { 5, 1, { 0, 0, 0, 0, 0 } }
+    },
+    {
+        { 6, 1, { 1e-10, -1e-10, 1e-9, -1e-9, 1e-8, -1e-8 } },
+        { 6, 1, { -1e-10, 1e-10, -1e-9, 1e-9, -1e-8, 1e-8 } }
+    },
+    {
+        { 7, 1, { 10, -20, 30, -40, 50, -60, 70 } },
+        { 7, 1, { -7, 6, -5, 4, -3, 2, -1 } }
+    },
+    {
+        { 8, 1, { 1, 0, 0, 0, 0, 0, 0, 1 } },
+        { 8, 1, { 0, 1, 0, 0, 0, 0, 1, 0 } }
+    },
+    {
+        { 9, 1, { 1e10, -1e10, 1e10, -1e10, 1e-10, -1e-10, 1e-10, -1e-10, 0 } },
+        { 9, 1, { -1e10, 1e10, -1e10, 1e10, -1e-10, 1e-10, -1e-10, 1e-10, 0 } }
+    },
+    {
+        { 10, 1, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } },
+        { 10, 1, { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 } }
+    },
+    {
+        { 3, 1, { 1e100, -1e100, 1e-100 } },
+        { 3, 1, { -1e100, 1e100, -1e-100 } }
+    },
+    {
+        { 4, 1, { 0.333333333333, 0.666666666667, -0.333333333333, -0.666666666667 } },
+        { 4, 1, { 3, -3, 6, -6 } }
+    },
+    {
+        { 5, 1, { -5, -4, -3, -2, -1 } },
+        { 5, 1, { 1, 2, 3, 4, 5 } }
+    },
+    {
+        { 8, 1, { 0, 0, 0, 1, 0, 0, 0, 0 } },
+        { 8, 1, { 0, 0, 0, 0, 0, 0, 0, 1 } }
+    },
+    {
+        { 10, 1, { 2.5, -3.5, 4.5, -5.5, 6.5, -7.5, 8.5, -9.5, 10.5, -11.5 } },
+        { 10, 1, { -11.5, 10.5, -9.5, 8.5, -7.5, 6.5, -5.5, 4.5, -3.5, 2.5 } }
+    }
+};
+
+
 /* 
 * Matrix-matrix addition on valid square matrices..
 */
@@ -87,10 +224,10 @@ static bool test_matrix_add(void) {
     const matrixv_t *in1, *in2;
     matrixv_t *out;
 
-    for (size_t i = 0; i < valid_square_pairs.size(); i++) {
+    for (size_t i = 0; i < valid_square.size(); i++) {
         
-        in1 = valid_square_pairs[i].in1.get_view();
-        in2 = valid_square_pairs[i].in2.get_view();
+        in1 = valid_square[i].in1.get_view();
+        in2 = valid_square[i].in2.get_view();
 
         out_view.resize_view(in1->nrow, in1->ncol); 
         out = out_view.get_view();
@@ -114,10 +251,10 @@ static bool test_matrix_sub(void) {
     const matrixv_t *in1, *in2;
     matrixv_t *out;
 
-    for (size_t i = 0; i < valid_square_pairs.size(); i++) {
+    for (size_t i = 0; i < valid_square.size(); i++) {
         
-        in1 = valid_square_pairs[i].in1.get_view();
-        in2 = valid_square_pairs[i].in2.get_view();
+        in1 = valid_square[i].in1.get_view();
+        in2 = valid_square[i].in2.get_view();
 
         out_view.resize_view(in1->nrow, in1->ncol); 
         out = out_view.get_view();
@@ -141,10 +278,10 @@ static bool test_matrix_mmul(void) {
     const matrixv_t *in1, *in2;
     matrixv_t *out;
 
-    for (size_t i = 0; i < valid_square_pairs.size(); i++) {
+    for (size_t i = 0; i < valid_square.size(); i++) {
         
-        in1 = valid_square_pairs[i].in1.get_view();
-        in2 = valid_square_pairs[i].in2.get_view();
+        in1 = valid_square[i].in1.get_view();
+        in2 = valid_square[i].in2.get_view();
 
         assert(in1->ncol == in2->nrow && "Invalid matrix dimensions for multiplication!");
 
@@ -179,8 +316,8 @@ static bool test_matrix_smul(void) {
 
     /* We'll iterate over all matrices in valid_square_pairs for now */
     std::array<const matrix_view *, 2> matrices;
-    for (size_t i = 0; i < valid_square_pairs.size(); i++) {
-        matrices = std::array<const matrix_view *, 2>{ &valid_square_pairs[i].in1, &valid_square_pairs[i].in2 };
+    for (size_t i = 0; i < valid_square.size(); i++) {
+        matrices = std::array<const matrix_view *, 2>{ &valid_square[i].in1, &valid_square[i].in2 };
 
         for (size_t j = 0; j < 2; j++) {
             in_mat = matrices[j]->get_view();
