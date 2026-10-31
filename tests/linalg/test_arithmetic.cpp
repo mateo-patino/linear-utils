@@ -218,7 +218,7 @@ static const std::vector<matrix_pair> valid_column = {
 /* 
 * Matrix-matrix addition on valid square matrices..
 */
-static bool test_matrix_add(void) {
+static bool test_matrix_add_square(void) {
 
     matrix_view out_view;
     const matrixv_t *in1, *in2;
@@ -242,10 +242,64 @@ static bool test_matrix_add(void) {
 }
 
 
+/*
+* Matrix-matrix addition on valid row vectors.
+*/
+static bool test_matrix_add_row_vec(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in1, *in2;
+    matrixv_t *out;
+
+    for (size_t i = 0; i < valid_row.size(); i++) {
+
+        in1 = valid_row[i].in1.get_view();
+        in2 = valid_row[i].in2.get_view();
+
+        out_view.resize_view(in1->nrow, in1->ncol);
+        out = out_view.get_view();
+
+        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!");
+
+        ASSERT_TRUE(matrix_add(out, in1, in2) == 0);
+        ASSERT_CORRECT_ADD(out, in1, in2);
+    }
+
+    return true;
+}
+
+
+/*
+* Matrix-matrix addition on valid column vectors.
+*/
+static bool test_matrix_add_col_vec(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in1, *in2;
+    matrixv_t *out;
+
+    for (size_t i = 0; i < valid_column.size(); i++) {
+
+        in1 = valid_column[i].in1.get_view();
+        in2 = valid_column[i].in2.get_view();
+
+        out_view.resize_view(in1->nrow, in1->ncol);
+        out = out_view.get_view();
+
+        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!");
+
+        ASSERT_TRUE(matrix_add(out, in1, in2) == 0);
+        ASSERT_CORRECT_ADD(out, in1, in2);
+    }
+
+    return true;
+}
+
+
 /* 
 * Matrix-matrix addition on valid square matrices..
 */
-static bool test_matrix_sub(void) {
+static bool test_matrix_sub_square(void) {
 
     matrix_view out_view;
     const matrixv_t *in1, *in2;
@@ -262,6 +316,60 @@ static bool test_matrix_sub(void) {
         assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!");
     
         ASSERT_TRUE(matrix_sub(out, in1, in2) == 0); 
+        ASSERT_CORRECT_SUB(out, in1, in2);
+    }
+
+    return true;
+}
+
+
+/*
+* Matrix-matrix subtraction on valid row vectors.
+*/
+static bool test_matrix_sub_row_vec(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in1, *in2;
+    matrixv_t *out;
+
+    for (size_t i = 0; i < valid_row.size(); i++) {
+
+        in1 = valid_row[i].in1.get_view();
+        in2 = valid_row[i].in2.get_view();
+
+        out_view.resize_view(in1->nrow, in1->ncol);
+        out = out_view.get_view();
+
+        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!");
+
+        ASSERT_TRUE(matrix_sub(out, in1, in2) == 0);
+        ASSERT_CORRECT_SUB(out, in1, in2);
+    }
+
+    return true;
+}
+
+
+/*
+* Matrix-matrix subtraction on valid column vectors.
+*/
+static bool test_matrix_sub_col_vec(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in1, *in2;
+    matrixv_t *out;
+
+    for (size_t i = 0; i < valid_column.size(); i++) {
+
+        in1 = valid_column[i].in1.get_view();
+        in2 = valid_column[i].in2.get_view();
+
+        out_view.resize_view(in1->nrow, in1->ncol);
+        out = out_view.get_view();
+
+        assert(in1->nrow == in2->nrow && in1->ncol == in2->ncol && "Invalid matrix dimensions!");
+
+        ASSERT_TRUE(matrix_sub(out, in1, in2) == 0);
         ASSERT_CORRECT_SUB(out, in1, in2);
     }
 
@@ -343,8 +451,12 @@ static bool test_matrix_smul(void) {
 * This style of initialization should work in the C++17+ standard
 */
 static const std::array test_cases = {
-    TEST(test_matrix_add),
-    TEST(test_matrix_sub),
+    TEST(test_matrix_add_square),
+    TEST(test_matrix_add_row_vec),
+    TEST(test_matrix_add_col_vec),
+    TEST(test_matrix_sub_square),
+    TEST(test_matrix_sub_row_vec),
+    TEST(test_matrix_sub_col_vec),
     TEST(test_matrix_mmul),
     TEST(test_matrix_smul)
 };
