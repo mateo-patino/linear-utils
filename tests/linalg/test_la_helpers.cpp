@@ -17,6 +17,11 @@
 
 /*
 * Copy constructor
+*
+* Note that this performs a deep copy because "data_(other.data_)" runs the
+* std::vector copy constructor, which will allocate memory for the matrix's
+* entries in completely new memory address. Hence, the copy and the orignal
+* object will not share the same scalar data in memory.
 */
 matrix_view::matrix_view(const matrix_view& other) 
     : view_(other.view_), data_(other.data_) {
@@ -315,3 +320,37 @@ void assert_correct_mmul_failed(const matrixv_t *C, const matrixv_t *A, const ma
     perr("\n", PAD, "at ", file, ":", line, "\n");
     perr(PAD, "in ", func, "\n");
 }
+
+
+bool assert_correct_smul(const matrixv_t *C, scalar s, const matrixv_t *A, Eigen::MatrixXd& expected) {
+    if (!C || !A) {
+        std::cerr << "Error: NULL matrix view!\n";
+        return false;
+    }
+
+    /* Compute s * A */
+    const Eigen::MatrixXd eigen_A = get_Eigen_matrix(A);
+    const Eigen::MatrixXd eigen_C = static_cast<double>(s) * eigen_A;
+    expected = eigen_C;
+
+    return are_equal_matrices(eigen_C, C); 
+}
+
+
+void assert_correct_smul_failed(const matrixv_t *C, scalar s, const matrixv_t *A, const char *file, int line, 
+                                const char *func, const Eigen::MatrixXd& expected) {
+    
+    perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
+    perr("\n", PAD, "Attempted to multiply matrix:\n");
+    perr("\n", PAD, "A =\n");
+    pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
+    perr("\n", PAD, "by scalar: ", s, "\n");
+    perr("\n", PAD, "Got:\n");
+    pretty_print_matrix(std::cerr, C, sizeof(PAD) - 1);
+    perr("\n", PAD, "Expected:\n");
+    pretty_print_matrix(std::cerr, expected, sizeof(PAD) - 1);
+    perr("\n", PAD, "at ", file, ":", line, "\n");
+    perr(PAD, "in ", func, "\n");
+
+}
+

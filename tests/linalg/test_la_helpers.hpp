@@ -194,4 +194,23 @@ void assert_correct_mmul_failed(const matrixv_t *C, const matrixv_t *A, const ma
                                 const char *file, int line, const char *func, const Eigen::MatrixXd& expected);
 
 
+/* For 3 matrixv_t matrices, check that C = s * A. */
+#define ASSERT_CORRECT_SMUL(C, s, A) \
+    do { \
+        const matrixv_t *_C = (const matrixv_t *)C; \
+        const scalar _s = (const scalar)s; \
+        const matrixv_t *_A = (const matrixv_t *)A; \
+        Eigen::MatrixXd expected; \
+        if (!assert_correct_smul(_C, _s, _A, expected)) { \
+            assert_correct_smul_failed(_C, _s, _A, __FILE__, __LINE__, __func__, expected); \
+            return false; \
+        } \
+    } while(0)
+
+
+bool assert_correct_smul(const matrixv_t *C, scalar s, const matrixv_t *A, Eigen::MatrixXd& expected);
+void assert_correct_smul_failed(const matrixv_t *C, scalar s, const matrixv_t *A, const char *file, int line, 
+                                const char *func, const Eigen::MatrixXd& expected);
+
+
 #endif
