@@ -159,6 +159,46 @@ static bool test_matrix_mmul(void) {
 }
 
 
+
+/* 
+* Scalar-matrix multiplication.
+*/
+static bool test_matrix_smul(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in_mat;
+    matrixv_t *out;
+
+    std::vector<scalar> scalars = {
+        0.0, 1.0, -1.0, 2.0, -2.0,
+        0.5, -0.5, 3.14, -3.14, 10.0,
+        -10.0, 100.0, -100.0, 1.5, -1.5,
+        0.001, -0.001, 42.0, -42.0, 7.25,
+        -1e12, 1e-12, 1e12
+    };
+
+    /* We'll iterate over all matrices in valid_square_pairs for now */
+    std::array<const matrix_view *, 2> matrices;
+    for (size_t i = 0; i < valid_square_pairs.size(); i++) {
+        matrices = std::array<const matrix_view *, 2>{ &valid_square_pairs[i].in1, &valid_square_pairs[i].in2 };
+
+        for (size_t j = 0; j < 2; j++) {
+            in_mat = matrices[j]->get_view();
+            out_view.resize_view(in_mat->nrow, in_mat->ncol); 
+            out = out_view.get_view();
+
+            /* Multiply the current matrix by all scalars in the vector above */
+            for ( scalar s : scalars ) {
+                ASSERT_TRUE(scalar_matrix_mul(out, s, in_mat) == 0); 
+                ASSERT_CORRECT_SMUL(out, s, in_mat);
+            }
+        }
+    }
+
+    return true;
+}
+
+
 /*
 * To run a test, add it to this table, which is read by run_arithmetic_tests
 * to perform all tests listed here.
@@ -168,7 +208,8 @@ static bool test_matrix_mmul(void) {
 static const std::array test_cases = {
     TEST(test_matrix_add),
     TEST(test_matrix_sub),
-    TEST(test_matrix_mmul)
+    TEST(test_matrix_mmul),
+    TEST(test_matrix_smul)
 };
 
 
