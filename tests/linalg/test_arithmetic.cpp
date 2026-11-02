@@ -284,6 +284,15 @@ static const std::vector<matrix_pair> valid_row_col = {
 };
 
 
+std::vector<scalar> scalars = {
+    0.0, 1.0, -1.0, 2.0, -2.0,
+    0.5, -0.5, 3.14, -3.14, 10.0,
+    -10.0, 100.0, -100.0, 1.5, -1.5,
+    0.001, -0.001, 42.0, -42.0, 7.25,
+    -1e12, 1e-12, 1e12
+};
+
+
 /* 
 * Matrix-matrix addition on valid square matrices..
 */
@@ -473,23 +482,43 @@ static bool test_matrix_mmul_square(void) {
 }
 
 
+/*
+* Matrix-matrix multiplication between valid row and column vectors.
+*/
+static bool test_matrix_mmul_row_vec(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in1, *in2;
+    matrixv_t *out;
+
+    for (size_t i = 0; i < valid_row_col.size(); i++) {
+
+        in1 = valid_row_col[i].in1.get_view();
+        in2 = valid_row_col[i].in2.get_view();
+
+        assert(in1->ncol == in2->nrow && "Invalid matrix dimensions for multiplication!");
+
+        out_view.resize_view(in1->nrow, in2->ncol);
+        out = out_view.get_view();
+
+        ASSERT_TRUE(matrix_mul(out, in1, in2) == 0);
+        ASSERT_CORRECT_MMUL(out, in1, in2);
+    }
+
+    return true;
+}
+
+
 
 /* 
-* Scalar-matrix multiplication.
+* Scalar-matrix multiplication on square matrices.
 */
-static bool test_matrix_smul(void) {
+static bool test_matrix_smul_square(void) {
 
     matrix_view out_view;
     const matrixv_t *in_mat;
     matrixv_t *out;
 
-    std::vector<scalar> scalars = {
-        0.0, 1.0, -1.0, 2.0, -2.0,
-        0.5, -0.5, 3.14, -3.14, 10.0,
-        -10.0, 100.0, -100.0, 1.5, -1.5,
-        0.001, -0.001, 42.0, -42.0, 7.25,
-        -1e12, 1e-12, 1e12
-    };
 
     /* We'll iterate over all matrices in valid_square_pairs for now */
     std::array<const matrix_view *, 2> matrices;
@@ -501,9 +530,67 @@ static bool test_matrix_smul(void) {
             out_view.resize_view(in_mat->nrow, in_mat->ncol); 
             out = out_view.get_view();
 
-            /* Multiply the current matrix by all scalars in the vector above */
+            /* Multiply the current matrix by the scalars in `scalars` */
             for ( scalar s : scalars ) {
                 ASSERT_TRUE(scalar_matrix_mul(out, s, in_mat) == 0); 
+                ASSERT_CORRECT_SMUL(out, s, in_mat);
+            }
+        }
+    }
+
+    return true;
+}
+
+
+/*
+* Scalar-matrix multiplication on valid row vectors.
+*/
+static bool test_matrix_smul_row_vec(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in_mat;
+    matrixv_t *out;
+
+    std::array<const matrix_view *, 2> matrices;
+    for (size_t i = 0; i < valid_row.size(); i++) {
+        matrices = std::array<const matrix_view *, 2>{ &valid_row[i].in1, &valid_row[i].in2 };
+
+        for (size_t j = 0; j < 2; j++) {
+            in_mat = matrices[j]->get_view();
+            out_view.resize_view(in_mat->nrow, in_mat->ncol);
+            out = out_view.get_view();
+
+            for (scalar s : scalars) {
+                ASSERT_TRUE(scalar_matrix_mul(out, s, in_mat) == 0);
+                ASSERT_CORRECT_SMUL(out, s, in_mat);
+            }
+        }
+    }
+
+    return true;
+}
+
+
+/*
+* Scalar-matrix multiplication on valid column vectors.
+*/
+static bool test_matrix_smul_col_vec(void) {
+
+    matrix_view out_view;
+    const matrixv_t *in_mat;
+    matrixv_t *out;
+
+    std::array<const matrix_view *, 2> matrices;
+    for (size_t i = 0; i < valid_column.size(); i++) {
+        matrices = std::array<const matrix_view *, 2>{ &valid_column[i].in1, &valid_column[i].in2 };
+
+        for (size_t j = 0; j < 2; j++) {
+            in_mat = matrices[j]->get_view();
+            out_view.resize_view(in_mat->nrow, in_mat->ncol);
+            out = out_view.get_view();
+
+            for (scalar s : scalars) {
+                ASSERT_TRUE(scalar_matrix_mul(out, s, in_mat) == 0);
                 ASSERT_CORRECT_SMUL(out, s, in_mat);
             }
         }
@@ -527,7 +614,10 @@ static const std::array test_cases = {
     TEST(test_matrix_sub_row_vec),
     TEST(test_matrix_sub_col_vec),
     TEST(test_matrix_mmul_square),
-    TEST(test_matrix_smul)
+    TEST(test_matrix_mmul_row_vec),
+    TEST(test_matrix_smul_square),
+    TEST(test_matrix_smul_row_vec),
+    TEST(test_matrix_smul_col_vec)
 };
 
 
