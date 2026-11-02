@@ -215,6 +215,75 @@ static const std::vector<matrix_pair> valid_column = {
 };
 
 
+/*
+* Compatible row/column-vector pairs for matrix multiplication. Each row
+* vector has n columns and its paired column vector has n rows, producing a
+* valid 1x1 matrix product.
+*/
+static const std::vector<matrix_pair> valid_row_col = {
+    {
+        { 1, 1, { 0 } },
+        { 1, 1, { 42 } }
+    },
+    {
+        { 1, 2, { 1, -1 } },
+        { 2, 1, { 1, 1 } }
+    },
+    {
+        { 1, 3, { 1, 2, 3 } },
+        { 3, 1, { 3, 2, 1 } }
+    },
+    {
+        { 1, 4, { 1, 0, 0, 1 } },
+        { 4, 1, { 1, 0, 0, 1 } }
+    },
+    {
+        { 1, 5, { 1, 1, 1, 1, 1 } },
+        { 5, 1, { 1, -1, 1, -1, 1 } }
+    },
+    {
+        { 1, 6, { 0.5, -1.0, 1.5, -2.0, 2.5, -3.0 } },
+        { 6, 1, { 2, 2, 2, 2, 2, 2 } }
+    },
+    {
+        { 1, 7, { 10, -20, 30, -40, 50, -60, 70 } },
+        { 7, 1, { 7, 6, 5, 4, 3, 2, 1 } }
+    },
+    {
+        { 1, 8, { 1, 0, 0, 0, 0, 0, 0, 0 } },
+        { 8, 1, { 1, 2, 3, 4, 5, 6, 7, 8 } }
+    },
+    {
+        { 1, 9, { 1e10, -1e10, 1e-10, -1e-10, 1, -1, 0, 0, 0 } },
+        { 9, 1, { 1e-10, 1e-10, 1e10, 1e10, 2, 2, 3, 4, 5 } }
+    },
+    {
+        { 1, 10, { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } },
+        { 10, 1, { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 } }
+    },
+    {
+        { 1, 3, { 1e100, -1e100, 1e-100 } },
+        { 3, 1, { 1e-100, 1e-100, 1e100 } }
+    },
+    {
+        { 1, 4, { 0.333333333333, 0.666666666667, -0.333333333333, -0.666666666667 } },
+        { 4, 1, { 3, 3, 6, 6 } }
+    },
+    {
+        { 1, 5, { -5, -4, -3, -2, -1 } },
+        { 5, 1, { -1, -2, -3, -4, -5 } }
+    },
+    {
+        { 1, 8, { 0, 0, 0, 1, 0, 0, 0, 0 } },
+        { 8, 1, { 0, 0, 0, 99, 0, 0, 0, 0 } }
+    },
+    {
+        { 1, 10, { 2.5, -3.5, 4.5, -5.5, 6.5, -7.5, 8.5, -9.5, 10.5, -11.5 } },
+        { 10, 1, { -11.5, 10.5, -9.5, 8.5, -7.5, 6.5, -5.5, 4.5, -3.5, 2.5 } }
+    }
+};
+
+
 /* 
 * Matrix-matrix addition on valid square matrices..
 */
@@ -380,7 +449,7 @@ static bool test_matrix_sub_col_vec(void) {
 /* 
 * Matrix-matrix multiplication in the order in1 * in2.
 */
-static bool test_matrix_mmul(void) {
+static bool test_matrix_mmul_square(void) {
 
     matrix_view out_view;
     const matrixv_t *in1, *in2;
@@ -457,7 +526,7 @@ static const std::array test_cases = {
     TEST(test_matrix_sub_square),
     TEST(test_matrix_sub_row_vec),
     TEST(test_matrix_sub_col_vec),
-    TEST(test_matrix_mmul),
+    TEST(test_matrix_mmul_square),
     TEST(test_matrix_smul)
 };
 
