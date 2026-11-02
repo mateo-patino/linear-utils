@@ -12,6 +12,10 @@
 #include "linalg/scalar.h"
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
 * Compute the determinant of `A`. 
 *
@@ -54,6 +58,10 @@ int matrix_rref(matrixv_t *A);
 * The `data` arrays must not overlap each other in storage or we'll get 
 * undefined behavior.
 */
-int matrix_inv(matrixv_t *restrict C, matrixv_t *restrict A);
+int matrix_inv(matrixv_t *RESTRICT C, matrixv_t *RESTRICT A);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

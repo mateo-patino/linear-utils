@@ -43,7 +43,7 @@ int matrix_rref(matrixv_t *A) {
 }
 
 
-int matrix_inv(matrixv_t *restrict C, matrixv_t *restrict A) {
+int matrix_inv(matrixv_t *RESTRICT C, matrixv_t *RESTRICT A) {
     if (!C || !A) {
         return -1;
     }
