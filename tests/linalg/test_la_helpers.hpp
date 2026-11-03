@@ -226,6 +226,6 @@ void assert_correct_smul_failed(const matrixv_t *C, scalar s, const matrixv_t *A
     } while (0)
 
 bool assert_correct_det(scalar detval, const matrixv_t *A, double& expected);
-void assert_correct_det_failred(scalar detval, const matrixv_t *A, const char *file, int line, const char *func, double expected);
+void assert_correct_det_failed(scalar detval, const matrixv_t *A, const char *file, int line, const char *func, double expected);
 
 #endif

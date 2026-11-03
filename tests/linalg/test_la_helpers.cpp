@@ -354,3 +354,35 @@ void assert_correct_smul_failed(const matrixv_t *C, scalar s, const matrixv_t *A
 
 }
 
+
+bool assert_correct_det(scalar detval, const matrixv_t *A, double& expected) {
+    if (!A) {
+        std::cerr << "Error: NULL matrix view!\n";
+        return false;
+    }
+    else if (A->nrow != A->ncol) {
+        std::cerr << "Error: non-square matrix, expected square matrix!\n";
+        return false;
+    }
+    
+    const Eigen::MatrixXd eigen_A = get_Eigen_matrix(A);
+    const double eigen_detval = eigen_A.determinant();
+    expected = eigen_detval;
+
+    return are_equal(eigen_detval, detval);
+}   
+
+
+void assert_correct_det_failed(scalar detval, const matrixv_t *A, const char *file, int line, const char *func, 
+                               double expected) {
+    
+    perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
+    perr("\n", PAD, "Attempted to compute determinant of matrix:\n");
+    perr("\n", PAD, "A =\n");
+    pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
+    perr("\n", PAD, "Got: ", detval, "\n");
+    perr("\n", PAD, "Expected: ", expected, "\n");
+    perr("\n", PAD, "at ", file, ":", line, "\n");
+    perr(PAD, "in ", func, "\n");
+
+}
