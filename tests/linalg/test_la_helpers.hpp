@@ -197,9 +197,9 @@ void assert_correct_mmul_failed(const matrixv_t *C, const matrixv_t *A, const ma
 /* For 3 matrixv_t matrices, check that C = s * A. */
 #define ASSERT_CORRECT_SMUL(C, s, A) \
     do { \
-        const matrixv_t *_C = (const matrixv_t *)C; \
-        const scalar _s = (const scalar)s; \
-        const matrixv_t *_A = (const matrixv_t *)A; \
+        const matrixv_t *_C = (const matrixv_t *)(C); \
+        const scalar _s = (const scalar)(s); \
+        const matrixv_t *_A = (const matrixv_t *)(A); \
         Eigen::MatrixXd expected; \
         if (!assert_correct_smul(_C, _s, _A, expected)) { \
             assert_correct_smul_failed(_C, _s, _A, __FILE__, __LINE__, __func__, expected); \
@@ -212,5 +212,20 @@ bool assert_correct_smul(const matrixv_t *C, scalar s, const matrixv_t *A, Eigen
 void assert_correct_smul_failed(const matrixv_t *C, scalar s, const matrixv_t *A, const char *file, int line, 
                                 const char *func, const Eigen::MatrixXd& expected);
 
+
+/* Check that the determinant of `A` equals `detval` */
+#define ASSERT_CORRECT_DET(detval, A) \
+    do { \
+        const scalar _detval = (const scalar)(detval); \
+        const matrixv_t *_A = (const matrixv_t *)(A); \
+        double expected; \
+        if (!assert_correct_det(_detval, _A, expected)) { \
+            assert_correct_det_failed(_detval, _A, __FILE__, __LINE__, __func__, expected); \
+            return false; \
+        } \
+    } while (0)
+
+bool assert_correct_det(scalar detval, const matrixv_t *A, double& expected);
+void assert_correct_det_failred(scalar detval, const matrixv_t *A, const char *file, int line, const char *func, double expected);
 
 #endif
