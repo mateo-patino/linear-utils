@@ -2,6 +2,7 @@
 * Entry point to the linalg test suite.
 */
 #include "linalg/test_arithmetic.hpp"
+#include "linalg/test_unary_operations.hpp"
 #include "linalg/test_la_helpers.hpp"
 
 #include <iomanip>
@@ -47,6 +48,16 @@ int main(void) {
 
     total_tests += arithmetic_total;
     total_pass += arithmetic_success_count;
+
+    std::cout << '\n';
+    std::cout << BOLD << LINE << "UNARY OPERATION TESTS" << LINE << ANSI_RESET << '\n';
+
+    int unary_op_total = 0;
+    unsigned unary_op_success_count = run_unary_operations_tests(unary_op_total);
+    print_test_summary("Unary Operations", unary_op_total, unary_op_success_count);
+
+    total_tests += unary_op_total;
+    total_pass += unary_op_success_count;
 
     std::cout << '\n';
     print_overall_summary(total_tests, total_pass);

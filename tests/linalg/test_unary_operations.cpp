@@ -8,7 +8,7 @@
 /*
 * Test determinant routine on square matrices
 */
-static test_matrix_det_valid_square(void) {
+static bool test_matrix_det_valid_square(void) {
     
     scalar detval;
     matrixv_t *in_mat;
@@ -27,12 +27,18 @@ static test_matrix_det_valid_square(void) {
                          
             /* Note `in_mat` is modified in-place by matrix_det */
             ASSERT_TRUE(matrix_det(&detval, in_mat) == 0);
-
-            /* TODO: implement... */
             ASSERT_CORRECT_DET(detval, original.get_view()); 
         }
-
     }
+
+    return true;
+}
+
+
+
+unsigned run_unary_operations_tests(int& total) {
+    total = 1;
+    return test_matrix_det_valid_square() ? 1 : 0;
 }
 
 
