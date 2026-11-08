@@ -91,6 +91,7 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
     int swaps = 0;
     scalar pivot_entry, factor;
     size_t largest_entry_row;
+    int retval = 0;
     for (size_t j = 0; j < ncol; j++) {
         
         /* 
@@ -118,7 +119,8 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
         * want to check for proximity instead?
         */
         if (pivot_entry == 0) {
-            return 1;
+            retval = 1;
+            continue;
         }
 
         /*
@@ -137,7 +139,7 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
         *swap_count = swaps;
     }
     
-    return 0;
+    return retval;
 }
 
 

@@ -27,8 +27,9 @@ int scale_row(size_t i, scalar factor, matrixv_t *A);
 * directly modified. The number of row swaps performed to reduce `A` to upper
 * triangular form will be written to `swap_count` if not NULL.
 *
-* It returns -1 upon failure, 0 upon success, and 1 if the matrix is singular and 
-* cannot be put into upper triangular form.
+* It returns -1 upon failure and 0 or 1 upon success. If 0 is returned, the matrix
+* is non-singular. If 1 is returned, the matrix is singular and its upper triangular
+* form will have a zero along the diagonal.
 
 * This functions uses Gaussian elimination with partial pivoting. 
 */
