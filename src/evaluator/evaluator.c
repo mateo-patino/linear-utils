@@ -751,10 +751,6 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
     if ((ok = matrix_det(&det, tmp_view)) == -1) {
         return NULL;
     }
-    else if (ok == 1) {
-        fprintf(stderr, "Linear algebra: singular matrix, could not compute determinant.\n");
-        return NULL;
-    }
 
     tmp.type = SCALAR_RES;
     tmp.obj = copy_scalar(det, arena);
