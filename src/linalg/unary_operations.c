@@ -13,7 +13,9 @@ int matrix_det(scalar *out, matrixv_t *A) {
     if ((ok = to_upper_triangular(A, &row_swaps)) == -1) {
         return -1;
     }
+    /* to_upper_triangular returns 1 if `A` is singular, so we know det(A) = 0 */
     else if (ok == 1) {
+        *out = (scalar)0;
         return 1;
     }
 

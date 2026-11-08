@@ -19,11 +19,11 @@ extern "C" {
 /*
 * Compute the determinant of `A`. 
 *
-* The result is written to `out` and 0 is returned upon success.
-* If the determinant of `A` cannot be computed, 1 is returned if `A`
-* is a singular matrix and -1 is returned if `A` is not square or 
-* or another issue occurs. The function will reject any non-square
-* matrix.
+* The result is written to `out` and 0 or 1 is returned upon success.
+* 0 is returned if the matrix is non-singular and 1 is returned if the
+* matrix is singular (in which case `out` will contain the value 0).
+*
+* If the determinant of `A` cannot be computed, -1 is returned. 
 *
 * Note: The entries of `A` will be modified by this function. Internally,
 * row-reduction is used to put `A` into upper-triangular form, so provide
@@ -34,6 +34,8 @@ int matrix_det(scalar *out, matrixv_t *A);
 
 /*
 * Compute the Reduced Row-Echelon Form (RREF) of `A`.
+*
+* `A` may be of any dimensions and singular or non-singular.
 * 
 * The RREF of `A` is performed in-place, so `A` will be modified by this
 * function.  0 is returned upon success and -1 upon failure.
