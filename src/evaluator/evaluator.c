@@ -241,7 +241,7 @@ static matrixv_t *deep_copy_matrixv_arena(const matrixv_t *tmp, arena_t *arena) 
     * around/skipped by the strides won't be copied because `tmp` doesn't tell
     * us how many of them exist nor how large the `data` block is in memory.
     */
-    new_view.row_stride = 1;
+    new_view.row_stride = new_view.ncol;
     new_view.column_stride = 1;
 
     size_t k = 0;
@@ -436,7 +436,7 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
             tmp.nrow = nrow;
             tmp.ncol = ncol;
 
-            tmp.row_stride = 1;
+            tmp.row_stride = ncol;
             tmp.column_stride = 1;
 
             tmp.data = allocate_scalars(nrow * ncol, arena);
@@ -455,7 +455,7 @@ static matrixv_t *initialize_output_view(operator_type op, const matrixv_t *left
             tmp.nrow = nrow;
             tmp.ncol = ncol;
 
-            tmp.row_stride = 1;
+            tmp.row_stride = ncol;
             tmp.column_stride = 1;
 
             tmp.data = allocate_scalars(nrow * ncol, arena);
@@ -499,7 +499,7 @@ static matrixv_t *init_view_with_dim(size_t nrow, size_t ncol, arena_t *arena) {
     tmp.nrow = nrow;
     tmp.ncol = ncol;
 
-    tmp.row_stride = 1;
+    tmp.row_stride = ncol;
     tmp.column_stride = 1;
 
     tmp.data = allocate_scalars(nrow * ncol, arena);
@@ -525,7 +525,7 @@ static matrixv_t *init_identity_matrix(size_t n, arena_t *arena) {
     tmp.ncol = n;
     tmp.nrow = n;
 
-    tmp.row_stride = 1;
+    tmp.row_stride = tmp.ncol;
     tmp.column_stride = 1;
 
     tmp.data = allocate_scalars(n * n, arena);
@@ -737,9 +737,6 @@ static result_t *m_det(const result_t *right, arena_t *arena) {
     /* 
     * Do a deep copy of the matrix because matrix_det does in-place operations on 
     * on the matrix it gets. Note this copy is in the heap and must be freed.
-    *
-    * NEEDSWORK: i shouldn't have used malloc/free here. This should simply re-use the 
-    * memory arena for the temporary view, no additional malloc'ing here is neeed.
     */
     matrixv_t *tmp_view = deep_copy_matrixv_arena((matrixv_t *)right->obj, arena);
     if (!tmp_view) {
