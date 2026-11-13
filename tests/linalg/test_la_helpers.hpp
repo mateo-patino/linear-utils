@@ -7,7 +7,6 @@
 
 /* C interfaces */
 #include "linalg/view.h"
-#include "linalg/scalar.h"
 
 #include <vector>
 #include <iostream>

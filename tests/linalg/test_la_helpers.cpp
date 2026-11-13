@@ -13,7 +13,6 @@
 
 /* C inteface */
 #include "linalg/view.h"
-#include "linalg/scalar.h"
         
 
 /*
