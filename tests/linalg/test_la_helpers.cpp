@@ -278,6 +278,21 @@ void pretty_print_matrix(std::ostream& stream, const Eigen::MatrixXd& matrix, in
 }
 
 
+matrix_view init_identity(std::size_t n) {
+
+    /* Entries initialized to zero */
+    matrix_view out(n, n);
+    matrixv_t *view = out.get_view();
+    size_t rs = view->row_stride;
+
+    for (std::size_t i = 0; i < n; i++) {
+        view->data[i*(rs + 1)] = 1;
+    }
+
+    return out;
+}
+
+
 /* 
 * Returns true if C = A + B, where A + B is performed by Eigen and 
 * the result is checked against `C` if `subtract` is false. Same operation
@@ -438,4 +453,29 @@ void assert_correct_det_failed(scalar detval, const matrixv_t *A, const char *fi
     perr("\n", PAD, "at ", file, ":", line, "\n");
     perr(PAD, "in ", func, "\n");
 
+}
+
+
+bool assert_correct_rref(const matrixv_t *rref_A, const matrixv_t *expected) {
+    if (!rref_A || !expected) {
+        std::cerr << "Error: NULL matrix view!\n";
+        return false;
+    }
+
+    return are_equal_matrices(rref_A, expected);
+}
+
+
+void assert_correct_rref_failed(const matrixv_t *rref_A, const matrixv_t *A, const char *file, int line, const char *func, const matrixv_t *expected) {
+
+    perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
+    perr("\n", PAD, "Attempted to compute RREF of matrix:\n");
+    perr("\n", PAD, "A =\n");
+    pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
+    perr("\n", PAD, "Got:\n");
+    pretty_print_matrix(std::cerr, rref_A, sizeof(PAD) - 1);
+    perr("\n", PAD, "Expected:\n");
+    pretty_print_matrix(std::cerr, expected, sizeof(PAD) - 1);
+    perr("\n", PAD, "at ", file, ":", line, "\n");
+    perr(PAD, "in ", func, "\n");
 }

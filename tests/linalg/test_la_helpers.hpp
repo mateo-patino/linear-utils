@@ -132,6 +132,11 @@ void pretty_print_matrix(std::ostream& stream, const Eigen::MatrixXd& matrix, in
 
 
 /*
+* Returns a matrix_view containing the nxn identity matrix.
+*/
+matrix_view init_identity(std::size_t n);
+
+/*
 * This test suite uses macros to assert conditions.
 *
 * The macros below perform various condition checks. Their names 
@@ -239,5 +244,24 @@ void assert_correct_smul_failed(const matrixv_t *C, scalar s, const matrixv_t *A
 
 bool assert_correct_det(scalar detval, const matrixv_t *A, double& expected);
 void assert_correct_det_failed(scalar detval, const matrixv_t *A, const char *file, int line, const char *func, double expected);
+
+
+/* 
+* Check that the reduced row-echelon form of `A` equals `expected`. The RREF of
+* `A` should be passed in `rref_A`
+*/
+#define ASSERT_CORRECT_RREF(rref_A, A, expected) \
+    do { \
+        const matrixv_t *_rref_A = (const matrixv_t *)(rref_A); \
+        const matrixv_t *_A = (const matrixv_t *)(A); \
+        const matrixv_t *_expected = (const matrixv_t *)(expected); \
+        if (!assert_correct_rref(_rref_A, _expected)) { \
+            assert_correct_rref_failed(_rref_A, _A, __FILE__, __LINE__, __func__, _expected); \
+            return false; \
+        } \
+    } while (0)
+
+bool assert_correct_rref(const matrixv_t *rref_A, const matrixv_t *expected);
+void assert_correct_rref_failed(const matrixv_t *rref_A, const matrixv_t *A, const char *file, int line, const char *func, const matrixv_t *expected);
 
 #endif
