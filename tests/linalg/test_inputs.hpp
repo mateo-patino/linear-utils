@@ -247,6 +247,98 @@ const std::vector<matrix_view> valid_square_singular = {
 
 
 /*
+* Singular square matrices paired with their expected reduced row-echelon
+* forms. The first matrix in each pair is copied from valid_square_singular.
+* 
+* Note that Eigen doesn't have a method to compute the RREF of a matrix.
+* These RREF matrices are generated via both Python and by hand.
+* Python's sympy can do a good job of putting a matrix in RREF which
+* one can easily read off and write here. For simple matrices one
+* can quickly work out by hand the RREF. In either case, generating
+* the expected RREF of a matrix is more expensive than generating
+* the expected results for other routines, so any contributions expanding
+* these RREF test cases would be highly appreciated!
+*/
+const std::vector<matrix_pair> valid_square_singular_rref = {
+
+    { valid_square_singular[0], { 1, 1, { 0 } } },
+    { valid_square_singular[1], { 2, 2, { 1, 1, 0, 0 } } },
+    { valid_square_singular[2], { 2, 2, { 0, 0, 0, 0 } } },
+    { valid_square_singular[3], { 2, 2, { 1, 2, 0, 0 } } },
+    { valid_square_singular[4], { 2, 2, { 1, 2, 0, 0 } } },
+    { valid_square_singular[5], { 2, 2, { 1, -2, 0, 0 } } },
+    { valid_square_singular[6], { 2, 2, { 0, 1, 0, 0 } } },
+    { valid_square_singular[7], { 3, 3, { 1, 0, 2, 0, 1, -0.25, 0, 0, 0 } } },
+    { valid_square_singular[8], { 3, 3, { 1, 0, -1, 0, 1, 2, 0, 0, 0 } } },
+    { valid_square_singular[9], { 3, 3, { 1, 0, 2, 0, 1, 4.0/3.0, 0, 0, 0 } } },
+    { valid_square_singular[10], { 3, 3, { 1, 0, 1, 0, 1, 1, 0, 0, 0 } } },
+    { valid_square_singular[11], { 3, 3, { 1, 2, 0, 0, 0, 1, 0, 0, 0 } } },
+    { valid_square_singular[12], { 4, 4, { 1, 0, -1, -2, 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0 } } },
+    { valid_square_singular[13], { 4, 4, { 1, 0, 0, -4, 0, 1, 0, 11, 0, 0, 1, -6, 0, 0, 0, 0 } } },
+    { valid_square_singular[14], { 4, 4, { 1, 0, 1, 4, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 } } },
+    { valid_square_singular[15], { 4, 4, { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 } } },
+    { valid_square_singular[16], { 5, 5, {
+        1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 0, 1, 0,
+        0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0
+    } } },
+    { valid_square_singular[17], { 6, 6, {
+        1, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0
+    } } },
+    { valid_square_singular[18], { 7, 7, {
+        1, 0, 0, -15.0/4.0, 0, 0, 0,
+        0, 1, 0, 15.0/8.0, 0, 0, 0,
+        0, 0, 1, 5.0/4.0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0, 0
+    } } },
+    { valid_square_singular[19], { 8, 8, {
+        1, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0, 0, 0, 0
+    } } },
+    { valid_square_singular[20], { 9, 9, {
+        1, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0
+    } } },
+    { valid_square_singular[21], { 10, 10, {
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    } } },
+
+};
+
+
+/*
 * Row-vector pairs used to exercise non-square matrices. The table includes
 * zero entries, signed values, fractions, repeated entries, and values with
 * large and small magnitudes that remain safely below overflow thresholds.
