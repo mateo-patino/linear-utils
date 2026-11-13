@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <limits>
 
 
 /* C inteface */
@@ -117,6 +118,53 @@ bool are_equal(double a, double b, double rel_tol, double abs_tol) {
     }
     
     return std::abs(a - b) <= std::max(abs_tol, rel_tol * std::max(std::abs(a), std::abs(b)));
+}
+
+
+bool are_equal_det(scalar detval, const matrixv_t *A, scalar target) {
+    if (!A) {
+        return false;
+    }
+    else if (detval == target) {
+        return true;
+    }
+
+    /* 
+    * Compute product of the norm of each column. This is the upper bound
+    * on det(A). See Hadamard's inequality
+    */
+    scalar *A_data = A->data;
+    size_t nrow = A->nrow, ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
+    scalar scale = 1, norm = 0;
+    bool scale_overflow = false;
+
+    for (size_t j = 0; j < ncol; j++) {
+        norm = 0; 
+        for (size_t i = 0; i < nrow; i++) {
+            /* std::hypot internally scales inputs to reduce the risk of overflow */
+            norm = std::hypot(norm, A_data[i*rs + j*cs]);
+        }
+
+        /* Avoid allowing the Hadamard scale to become infinity. */
+        if (!std::isfinite(norm) || (norm != 0 && scale > std::numeric_limits<scalar>::max() / norm)) {
+            scale_overflow = true;
+            break;
+        }
+        scale *= norm;
+    }
+
+    /* Use the determinant values as a finite fallback scale. */
+    if (scale_overflow) {
+        scale = std::max(std::abs(detval), std::abs(target));
+        if (!std::isfinite(scale)) {
+            return false;
+        }
+        scale = std::max<scalar>(1, scale);
+    }
+
+    scalar abs_tol = 10.0 * std::numeric_limits<double>::epsilon() * scale;
+
+    return std::abs(detval - target) <= abs_tol;
 }
 
 
@@ -369,7 +417,12 @@ bool assert_correct_det(scalar detval, const matrixv_t *A, double& expected) {
     const double eigen_detval = eigen_A.determinant();
     expected = eigen_detval;
 
-    return are_equal(eigen_detval, detval);
+    /*
+    * Note that we don't use are_equal to check that the determinants
+    * are the same. Instead call are_equal_det which is more numerically
+    * robust for comparing a determinant to some target value.
+    */
+    return are_equal_det(detval, A, static_cast<scalar>(eigen_detval));
 }   
 
 

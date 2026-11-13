@@ -113,6 +113,17 @@ bool are_equal(double a, double b, double rel_tol = 1e-12, double abs_tol = 1e-1
 
 
 /*
+* Returns true if `detval` equals `target`. `detval` should be the determinant of 
+* `A`. The comparison uses a matrix-dependent scale equal to the upper bound of a
+* matrix's determinant according to Hadamard's inequality.
+*
+* This is generally a more numerically robust way to check for equality between the
+* determinants of two matrices than are_equal.
+*/
+bool are_equal_det(scalar detval, const matrixv_t *A, scalar target);
+
+
+/*
 * Pretty prints a matrixv_t struct `matrix` to `stream`.
 * `wspace` worth of whitespaces are printed to the left of the matrix.
 */
@@ -224,6 +235,7 @@ void assert_correct_smul_failed(const matrixv_t *C, scalar s, const matrixv_t *A
             return false; \
         } \
     } while (0)
+
 
 bool assert_correct_det(scalar detval, const matrixv_t *A, double& expected);
 void assert_correct_det_failed(scalar detval, const matrixv_t *A, const char *file, int line, const char *func, double expected);
