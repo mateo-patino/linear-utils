@@ -8,11 +8,16 @@ bool are_equal(scalar a, scalar b, double abs_tol) {
 
 
 static scalar get_largest_entry(const matrixv_t *A) {
+    size_t nrow = A->nrow, ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
     const scalar *data = A->data;
-    scalar largest = data[0];
 
-    for (size_t i = 1; i < A->nrow * A->ncol; i++) {
-        largest = data[i] > largest ? data[i] : largest;
+    scalar largest = 0, entry = 0;
+
+    for (size_t i = 0; i < nrow; i++) {
+        for (size_t j = 0; j < ncol; j++) {
+            entry = fabs(data[i*rs + j*cs]);
+            largest = entry > largest ? entry : largest; 
+        }
     }
 
     return largest;
