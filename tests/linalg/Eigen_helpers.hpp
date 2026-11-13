@@ -17,4 +17,11 @@ Eigen::MatrixXd get_Eigen_matrix(const matrixv_t *matrix);
 */
 bool are_equal_matrices(const Eigen::MatrixXd& A, const matrixv_t *B);
 
+
+/*
+* Returns true if `A` and `B` have the same dimensions and all entries are
+* equal.
+*/
+bool are_equal_matrices(const matrixv_t *A, const matrixv_t *B);
+
 #endif

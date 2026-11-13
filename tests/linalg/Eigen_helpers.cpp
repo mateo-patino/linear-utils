@@ -51,3 +51,36 @@ bool are_equal_matrices(const Eigen::MatrixXd& A, const matrixv_t *B) {
 
     return true;
 }
+
+
+bool are_equal_matrices(const matrixv_t *A, const matrixv_t *B) {
+
+    if (!A || !B) {
+        return false;
+    }
+
+    /* Check dimensions match */
+    if (A->nrow != B->nrow || A->ncol != B->ncol) {
+        return false;
+    }
+
+    /* Compare the entries of `A` and `B` */
+    size_t nrow = A->nrow, ncol = A->ncol;
+    size_t A_rs = A->row_stride, A_cs = A->column_stride;
+    size_t B_rs = B->row_stride, B_cs = B->column_stride;
+    scalar *A_data = A->data;
+    scalar *B_data = B->data;
+
+    for (size_t i = 0; i < nrow; i++) {
+        for (size_t j = 0; j < ncol; j++) {
+
+            if (!are_equal(A_data[i * A_rs + j * A_cs],
+                           B_data[i * B_rs + j * B_cs])) {
+                return false;
+            }
+
+        }
+    }
+
+    return true;
+}
