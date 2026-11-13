@@ -3,12 +3,6 @@
 #include <math.h>
 
 
-
-#include "../printer/printer.h"
-#include "../types/matrix.h"
-
-
-
 int swap_rows(size_t i, size_t j, matrixv_t *A) {
     if (!A || i >= A->nrow || j >= A->nrow) {
         return -1;
@@ -175,9 +169,6 @@ int to_rref(matrixv_t *A) {
         pivot_entry = data[pivot_row * rs + j * cs];
         
         /* Column has no pivots, so move on to the next column without updating pivot_row */
-        if (j == ncol - 1) {
-            fprintf(stderr, "pivot_entry " PRISCALAR "\n", 32, pivot_entry);
-        }
         if (pivot_entry == 0) {
             continue;
         }
@@ -193,12 +184,7 @@ int to_rref(matrixv_t *A) {
 
         /* Move on to the next row */
         pivot_row++;
-    
-        fprintf(stderr, "After j = %zu...\n", j);
-        matrix_t *mat = init_matrix_token_from_view(A);
-        pretty_print_matrix(stderr, mat);
-        fprintf(stderr, "\n");
-        }
+    }
 
     return 0;
 }

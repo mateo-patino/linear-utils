@@ -1,9 +1,6 @@
 #include "linalg/unary_operations.h"
 #include "linalg/row_operations.h"
 
-#include "../printer/printer.h"
-#include "../types/matrix.h"
-
 
 int matrix_det(scalar *out, matrixv_t *A) {
     if (!out || !A || A->nrow != A->ncol) {
@@ -44,14 +41,8 @@ int matrix_rref(matrixv_t *A) {
     if (!A) {
         return -1;
     }
-    int out = to_rref(A);
 
-    fprintf(stderr, "After to_rref...\n");
-    matrix_t *mat = init_matrix_token_from_view(A);
-    pretty_print_matrix(stderr, mat);
-    fprintf(stderr, "\n");
-
-    return out;
+    return to_rref(A);
 }
 
 
