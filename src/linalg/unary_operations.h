@@ -53,7 +53,9 @@ int matrix_rref(matrixv_t *A);
 * and `C` in-place until `A` is in RREF, at which point `C` will
 * contain the inverse of `A`.
 *
-* 0 is returned upon success and -1 upon failure. 1 for math error???
+* 0 is returned upon success and -1 upon failure. 1 is returned if `A`
+* is a singular matrix and it's inverse cannot be computed. In this case,
+* the function exits early and `C` and `A` will contain stale data.
 *
 * Note: This function reads from and writes to `C->data` and `A->data` directly.
 * The `data` arrays must not overlap each other in storage or we'll get 

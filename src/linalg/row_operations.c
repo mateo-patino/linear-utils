@@ -249,13 +249,16 @@ int inv_augmented_gauss_jordan(matrixv_t *restrict C, matrixv_t *restrict A) {
 
         /* Normalize pivot entry and zero out all other entries in this column */
         scale_row(j, 1 / pivot_entry, A);
+        data[j * (rs + cs)] = 1.0;
         scale_row(j, 1 / pivot_entry, C);
+
         for (size_t i = 0; i < nrow; i++) {
             if (i == j) {
                 continue;
             }
             factor = -1 * data[i * rs + j * cs];
             add_row_multiple(i, factor, j, A);
+            data[i * rs + j * cs] = 0.0;
             add_row_multiple(i, factor, j, C);
         }
 
