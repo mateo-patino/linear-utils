@@ -1,4 +1,5 @@
 #include "linalg/row_operations.h"
+#include "linalg/view.h"
 
 #include <math.h>
 
@@ -86,11 +87,15 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
     size_t ncol = A->ncol, nrow = A->nrow, rs = A->row_stride, cs = A->column_stride;
     scalar *data = A->data;
 
+    /* Compute an absolute tolerance for equality comparisons */
+    scalar abs_tol = get_matrix_epsilon(A);
+
     /* Iterate through the columns in the matrix */
     int swaps = 0;
     scalar pivot_entry, factor;
     size_t largest_entry_row;
     int retval = 0;
+
     for (size_t j = 0; j < ncol; j++) {
         
         /* 
@@ -112,12 +117,8 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
         }
         pivot_entry = data[j * (rs + cs)];
 
-        /* 
-        * Check if singular matrix (i.e. all entries in the rows >= j are 0) 
-        * NEEDSWORK: Note we check exactly for 0 and not for proximity. Could we 
-        * want to check for proximity instead?
-        */
-        if (pivot_entry == 0) {
+        /* Check if singular matrix (i.e. all entries in the rows >= j are 0) */
+        if (are_equal(pivot_entry, 0.0, abs_tol)) {
             retval = 1;
             continue;
         }
@@ -147,6 +148,9 @@ int to_rref(matrixv_t *A) {
         return -1;
     }
     
+    /* Compute an absolute tolerance for equality comparisons */
+    scalar abs_tol = get_matrix_epsilon(A);
+    
     size_t nrow = A->nrow, ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
     scalar *data = A->data;
     size_t pivot_row = 0, largest_entry_row = 0;
@@ -169,7 +173,7 @@ int to_rref(matrixv_t *A) {
         pivot_entry = data[pivot_row * rs + j * cs];
         
         /* Column has no pivots, so move on to the next column without updating pivot_row */
-        if (pivot_entry == 0) {
+        if (are_equal(pivot_entry, 0.0, abs_tol)) {
             continue;
         }
         
@@ -189,10 +193,14 @@ int to_rref(matrixv_t *A) {
     return 0;
 }
 
+
 int inv_augmented_gauss_jordan(matrixv_t *restrict C, matrixv_t *restrict A) {
     if (!C || !A || A->nrow != A->ncol || A->nrow != C->nrow || A->ncol != C->ncol) {
         return -1;
     }
+
+    /* Compute an absolute tolerance for equality comparisons */
+    scalar abs_tol = get_matrix_epsilon(A);
     
     size_t nrow = A->nrow, ncol = A->ncol, rs = A->row_stride, cs = A->column_stride;
     scalar *data = A->data;
@@ -217,8 +225,8 @@ int inv_augmented_gauss_jordan(matrixv_t *restrict C, matrixv_t *restrict A) {
         }
         pivot_entry = data[j * (rs + cs)];
 
-        /* NEEDSWORK: again, decide if we should check for exact equality of zero. Same question for other row routines */
-        if (pivot_entry == 0) {
+        /* Check if singular matrix */
+        if (are_equal(pivot_entry, 0.0, abs_tol)) {
             return 1;
         }
 
