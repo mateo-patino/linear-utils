@@ -1,7 +1,6 @@
 #include "evaluator.h"
 #include "linalg/view.h"
 #include "linalg/arithmetic.h"
-#include "linalg/scalar.h"
 #include "linalg/unary_operations.h"
 #include "types/token.h"
 #include "arena.h"

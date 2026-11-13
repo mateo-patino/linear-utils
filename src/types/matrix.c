@@ -1,6 +1,5 @@
 #include "matrix.h"
 #include "linalg/view.h"
-#include "linalg/scalar.h"
 
 #include <stdlib.h>
 #include <limits.h>

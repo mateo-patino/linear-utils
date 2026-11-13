@@ -9,7 +9,6 @@
 
 
 #include "linalg/view.h"
-#include "linalg/scalar.h"
 
 
 #ifdef __cplusplus

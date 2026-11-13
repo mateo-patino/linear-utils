@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include "linalg/scalar.h"
+#include "linalg/view.h"
 #include "matrix.h"
 #include "arena.h"
 
