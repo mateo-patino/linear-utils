@@ -117,19 +117,27 @@ int to_upper_triangular(matrixv_t *A, int *swap_count) {
         }
         pivot_entry = data[j * (rs + cs)];
 
-        /* Check if singular matrix (i.e. all entries in the rows >= j are 0) */
+        /* 
+        * Check if singular matrix (i.e. all entries in the rows >= j are 0).
+        * Set the pivot and entries below it (which are guaranteed to be numerical zero
+        * too) to arithmetic zero.
+        */
         if (are_equal(pivot_entry, 0.0, abs_tol)) {
-            retval = 1;
+            for (size_t i = j; i < nrow; i++) {
+                data[i*rs + j*cs] = 0.0;
+            }
+            retval = 1; 
             continue;
         }
 
         /*
         * Cancel the entries below the pivot entry by adding a multiple of the pivot
-        * row to the row of each entry.
+        * row to the row of each entry. Set the entries below the pivot to arithmetic zero.
         */
         for (size_t i = j + 1; i < nrow; i++) {
             factor = data[i * rs + j * cs] / pivot_entry;
             add_row_multiple(i, -1 * factor, j, A);
+            data[i*rs + j*cs] = 0.0;
         }
         
         /* Repeat with the next column, starting one row below this time (note the i = j + 1) */ 
@@ -166,24 +174,33 @@ int to_rref(matrixv_t *A) {
             }
         }
 
+        /* Make the pivot row be largest_entry_row. Largest entry is now at pivot_row */
         if (largest_entry_row != pivot_row) {
             swap_rows(pivot_row, largest_entry_row, A);
         }
 
         pivot_entry = data[pivot_row * rs + j * cs];
         
-        /* Column has no pivots, so move on to the next column without updating pivot_row */
+        /* 
+        * Column has no pivots, so move on to the next column without updating pivot_row.
+        * Set to arithmetic zero all entries below pivot row (including pivot row).
+        */
         if (are_equal(pivot_entry, 0.0, abs_tol)) {
+            for (size_t i = pivot_row; i < nrow; i++) {
+                data[i * rs + j * cs] = 0.0;
+            }
             continue;
         }
         
         /* Normalize pivot row and zero out the non-pivot entries in this column */
         scale_row(pivot_row, 1 / pivot_entry, A); 
+        data[pivot_row * rs + j * cs] = 1.0;
         for (size_t i = 0; i < nrow; i++) {
             if (i == pivot_row) {
                 continue;
             }
             add_row_multiple(i, -1 * data[i * rs + j * cs], pivot_row, A);
+            data[i * rs + j * cs] = 0.0;
         }
 
         /* Move on to the next row */
