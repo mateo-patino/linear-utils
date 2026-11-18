@@ -120,11 +120,40 @@ static bool test_matrix_rref_singular_square(void) {
 }
 
 
+/*
+* Test matrix inversion on square non-singular matrices.
+*
+* The input matrices are copied because matrix_inv modifies both the input
+* matrix and the output matrix in-place.
+*/
+static bool test_matrix_inv_valid_square(void) {
+
+    matrixv_t *in_mat, *inverse_view;
+
+    for ( matrix_view view : valid_square_nonsingular ) {
+
+        matrix_view original = view;
+        in_mat = view.get_view();
+
+        assert(in_mat->nrow == in_mat->ncol && "Matrix is not square, this test expects square matrices!");
+
+        matrix_view inverse = init_identity(in_mat->nrow);
+        inverse_view = inverse.get_view();
+
+        ASSERT_TRUE(matrix_inv(inverse_view, in_mat) == 0);
+        ASSERT_CORRECT_INV(inverse_view, original.get_view());
+    }
+
+    return true;
+}
+
+
 static const std::array test_cases = {
     TEST(test_matrix_det_valid_square),
     TEST(test_matrix_det_singular_square),
     TEST(test_matrix_rref_valid_square),
-    TEST(test_matrix_rref_singular_square)
+    TEST(test_matrix_rref_singular_square),
+    TEST(test_matrix_inv_valid_square)
 };
 
 unsigned run_unary_operations_tests(int& total) {

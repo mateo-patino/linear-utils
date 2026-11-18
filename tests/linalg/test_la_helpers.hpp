@@ -263,4 +263,24 @@ void assert_correct_det_failed(scalar detval, const matrixv_t *A, const char *fi
 bool assert_correct_rref(const matrixv_t *rref_A, const matrixv_t *expected);
 void assert_correct_rref_failed(const matrixv_t *rref_A, const matrixv_t *A, const char *file, int line, const char *func, const matrixv_t *expected);
 
+
+/*
+* Check that `inverse_A` is the inverse of `A`.
+*/
+#define ASSERT_CORRECT_INV(inverse_A, A) \
+    do { \
+        const matrixv_t *_inverse_A = (const matrixv_t *)(inverse_A); \
+        const matrixv_t *_A = (const matrixv_t *)(A); \
+        Eigen::MatrixXd expected; \
+        if (!assert_correct_inv(_inverse_A, _A, expected)) { \
+            assert_correct_inv_failed(_inverse_A, _A, __FILE__, __LINE__, __func__, expected); \
+            return false; \
+        } \
+    } while (0)
+
+bool assert_correct_inv(const matrixv_t *inverse_A, const matrixv_t *A, Eigen::MatrixXd& expected);
+void assert_correct_inv_failed(const matrixv_t *inverse_A, const matrixv_t *A,
+                               const char *file, int line, const char *func,
+                               const Eigen::MatrixXd& expected);
+
 #endif

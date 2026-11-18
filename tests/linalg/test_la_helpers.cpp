@@ -478,3 +478,37 @@ void assert_correct_rref_failed(const matrixv_t *rref_A, const matrixv_t *A, con
     perr("\n", PAD, "at ", file, ":", line, "\n");
     perr(PAD, "in ", func, "\n");
 }
+
+
+bool assert_correct_inv(const matrixv_t *inverse_A, const matrixv_t *A, Eigen::MatrixXd& expected) {
+    if (!inverse_A || !A) {
+        std::cerr << "Error: NULL matrix view!\n";
+        return false;
+    }
+    else if (A->nrow != A->ncol) {
+        std::cerr << "Error: non-square matrix, expected square matrix!\n";
+        return false;
+    }
+
+    const Eigen::MatrixXd eigen_A = get_Eigen_matrix(A);
+    expected = eigen_A.inverse();
+
+    return are_equal_matrices(expected, inverse_A);
+}
+
+
+void assert_correct_inv_failed(const matrixv_t *inverse_A, const matrixv_t *A,
+                               const char *file, int line, const char *func,
+                               const Eigen::MatrixXd& expected) {
+
+    perr(BOLD, func, " ", ANSI_RED, "FAILED", ANSI_RESET, "\n");
+    perr("\n", PAD, "Attempted to compute inverse of matrix:\n");
+    perr("\n", PAD, "A =\n");
+    pretty_print_matrix(std::cerr, A, sizeof(PAD) - 1);
+    perr("\n", PAD, "Got:\n");
+    pretty_print_matrix(std::cerr, inverse_A, sizeof(PAD) - 1);
+    perr("\n", PAD, "Expected:\n");
+    pretty_print_matrix(std::cerr, expected, sizeof(PAD) - 1);
+    perr("\n", PAD, "at ", file, ":", line, "\n");
+    perr(PAD, "in ", func, "\n");
+}
