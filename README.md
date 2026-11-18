@@ -155,6 +155,8 @@ Run the unit-test suite:
 make test
 make test-linalg
 ```
+Note that you may need to reinitialize the Git repository to include the Eigen dependency which
+`test-linalg` requires.
 
 Run the Valgrind-based memory checks after building the application (Linux environment needed):
 
