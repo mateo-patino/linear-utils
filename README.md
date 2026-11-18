@@ -28,13 +28,13 @@ sudo cp lin /usr/local/bin/
 
 ```sh
 ./lin "1 + 2 * 3"
-# 7
+7
 
 ./lin "( 1 + 2 ) * 3"
-# 9
+9
 
 ./lin "10 / 4"
-# 2.5
+2.5
 ```
 
 All mathematical operators have word aliases, which can make expressions more readable in scripts:
@@ -62,9 +62,6 @@ Matrices with matching dimensions can be added or subtracted directly:
 
 ```sh
 ./lin "2x2 1 2 3 4 + 2x2 5 6 7 8"
-```
-
-```text
 | 6  8 |
 | 10 12 |
 ```
@@ -73,9 +70,6 @@ Scalar multiplication can be applied to an entire matrix:
 
 ```sh
 ./lin "3 * 2x2 1 2 3 4"
-```
-
-```text
 |  3  6 |
 |  9 12 |
 ```
@@ -85,9 +79,6 @@ compatible, just as they are in conventional linear algebra:
 
 ```sh
 ./lin "2x2 1 2 3 4 * 2x2 5 6 7 8"
-```
-
-```text
 | 19 22 |
 | 43 50 |
 ```
@@ -100,15 +91,15 @@ and `rref`/`reduced` (compute the reduced-row echelon form):
 
 ```sh
 ./lin "det 2x2 1 2 3 4"
-# -2
+-2
 
 ./lin "inv 2x2 1 2 3 4"
-# | -2.000  1.000 |
-# |  1.500 -0.500 |
+| -2.000  1.000 |
+|  1.500 -0.500 |
 
 ./lin "rref 2x3 1 2 3 2 4 6"
-# | 1 2 3 |
-# | 0 0 0 |
+| 1 2 3 |
+| 0 0 0 |
 ```
 
 Unary operations can be nested and combined with ordinary arithmetic. For example,
