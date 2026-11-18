@@ -17,6 +17,8 @@ OPEN_MP := $(shell echo "int main(void) { return 0; }" | $(CC) -fopenmp -x c - -
 
 CFLAGS = -std=$(CSTD) -Wall -Wextra -Werror -pedantic-errors $(OPEN_MP) -g
 CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -pedantic-errors -g
+RELEASE_CFLAGS = -std=$(CSTD) -O2 -Wall -Wextra -pedantic-errors $(OPEN_MP) -DNDEBUG
+
 CPPFLAGS = -Isrc -Itests
 LDLIBS = -lm
 
@@ -31,9 +33,11 @@ LINALG_SRC_DIR = $(SRC_DIR)/linalg
 TEST_DIR = tests
 TEST_LINALG_DIR = $(TEST_DIR)/linalg
 OBJ_DIR = build
+RELEASE_OBJ_DIR = build/release
 
 APP_SRCS := $(shell find $(SRC_DIR) -type f -name '*.c')
 APP_OBJS := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(APP_SRCS))
+RELEASE_APP_OBJS := $(patsubst $(SRC_DIR)/%.c,$(RELEASE_OBJ_DIR)/%.o,$(APP_SRCS))
 APP_OBJS_MAINLESS := $(filter-out $(OBJ_DIR)/main.o,$(APP_OBJS))
 
 LINALG_SRCS := $(shell find $(LINALG_SRC_DIR) -type f -name '*.c')
@@ -58,10 +62,10 @@ test: $(TEST_TARGET)
 test-linalg: $(TEST_LINALG_TARGET)
 	./$(TEST_LINALG_TARGET)
 
+.PHONY: all clean test test-linalg memcheck release
+
 memcheck: $(APP_TARGET)
 	./$(TEST_MEMORY)
-
-.PHONY: all clean test test-linalg memcheck
 
 # APP BUILD
 $(APP_TARGET): $(APP_OBJS)
@@ -70,6 +74,14 @@ $(APP_TARGET): $(APP_OBJS)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	mkdir -p $(dir $@)
 	$(COMPILE.c) -MMD -MP -c $< -o $@
+
+# RELEASE APP BUILD
+release: $(RELEASE_APP_OBJS)
+	$(LINK) $(RELEASE_CFLAGS) -o $(APP_TARGET) $^ $(LDLIBS)
+
+$(RELEASE_OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(CPPFLAGS) $(RELEASE_CFLAGS) -MMD -MP -c $< -o $@
 
 # TEST BUILD
 $(TEST_TARGET): $(TEST_OBJS) $(APP_OBJS_MAINLESS)
@@ -119,3 +131,4 @@ clean:
 -include $(TEST_OBJS:.o=.d)
 -include $(TEST_LINALG_OBJS:.o=.d)
 -include $(LINALG_OBJS:.o=.d)
+-include $(RELEASE_APP_OBJS:.o=.d)
