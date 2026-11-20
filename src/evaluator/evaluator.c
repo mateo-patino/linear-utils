@@ -45,7 +45,7 @@ static result_t *mm_mul(const result_t *left, const result_t *right, arena_t *ar
 static result_t *ss_div(const result_t *left, const result_t *right, arena_t *arena);
 static result_t *m_det(const result_t *right, arena_t *arena);
 static result_t *m_rref(const result_t *right, arena_t *arena);
-static eval_status op_to_error_enum(operator_type op, const result_t *leftt, const result_t *right);
+static eval_status op_to_error_enum(operator_type op, const result_t *left, const result_t *right);
 static result_t *perform_operation(operator_type op, const result_t *left, const result_t *right, arena_t *arena);
 
 static void set_status(eval_status code) {
@@ -839,15 +839,15 @@ static eval_status op_to_error_enum(operator_type op, const result_t *left, cons
     switch (op) {
 
         case ADD:
-            assert(!left && !right && left->type == right->type);
+            assert(left && right && left->type == right->type);
             return left->type == SCALAR_RES ? EVAL_SS_ADD_FAILED : EVAL_MM_ADD_FAILED;
 
         case SUB:
-            assert(!left && !right && left->type == right->type);
+            assert(left && right && left->type == right->type);
             return left->type == SCALAR_RES ? EVAL_SS_SUB_FAILED : EVAL_MM_SUB_FAILED;
 
         case MUL:
-            assert(!left && !right);
+            assert(left && right);
             if (left->type != right->type) {
                 return EVAL_SM_MUL_FAILED;
             }
