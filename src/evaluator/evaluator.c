@@ -575,7 +575,7 @@ static result_t *mm_add(const result_t *left, const result_t *right, arena_t *ar
     result_t tmp = {0};
 
     /* Compute output matrix */
-    const matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
+    const matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)right->obj;
     matrixv_t *C = initialize_output_view(ADD, A, B, arena);
     if (matrix_add(C, A, B) == -1) {
         return NULL;    
@@ -620,7 +620,7 @@ static result_t *mm_sub(const result_t *left, const result_t *right, arena_t *ar
     }
     result_t tmp = {0};
 
-    const matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)left->obj;
+    const matrixv_t *A = (matrixv_t *)left->obj, *B = (matrixv_t *)right->obj;
     matrixv_t *C = initialize_output_view(SUB, A, B, arena);
     if (matrix_sub(C, A, B) == -1) {
         return NULL;
