@@ -865,6 +865,9 @@ static eval_status op_to_error_enum(operator_type op, const result_t *left, cons
         case RREF:
             return EVAL_RREF_FAILED;
 
+        case INV:
+            return EVAL_INV_FAILED;
+
         default:
             return EVAL_FAILED;
     }
