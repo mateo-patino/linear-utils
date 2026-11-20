@@ -312,7 +312,7 @@ static scalar *allocate_scalars(size_t nentry, arena_t *arena) {
     }
 
     scalar *out = (scalar *)(arena->start + offset);
-    memset(out, 0, nentry);
+    memset(out, 0, nentry * sizeof(scalar));
 
     return out;
 }
